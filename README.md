@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ant Support
 
 A comprehensive diagnostic and support system for TV interfaces and device management.
@@ -166,3 +167,6 @@ Firuz1313
 ## Support
 
 For support and questions, please open an issue on GitHub. 
+=======
+# ant-support
+>>>>>>> 360f9eddece7f214db92b156a425dbae1d2c0ff3
