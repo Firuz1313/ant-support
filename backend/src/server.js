@@ -116,7 +116,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Статические файлы
 app.use("/media", express.static(path.join(__dirname, "../uploads")));
 
-// Кастом��ый middleware для логирования запросов
+// Кастом����ый middleware для логирования запросов
 app.use(requestLogger);
 
 // Дополнительное логирование для отладки
@@ -129,16 +129,65 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
+// Health check endpoints согласно ТЗ
 app.get("/health", (req, res) => {
   res.status(200).json({
-    status: "OK",
+    status: "ok",
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
     version: process.env.npm_package_version || "1.0.0",
     uptime: process.uptime(),
     memory: process.memoryUsage(),
   });
+});
+
+// Database health check согласно ТЗ: GET /health/db
+app.get("/health/db", async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    // Импортируем database утилиты
+    const { testConnection } = await import("./utils/database.js");
+
+    // Тестируем подключение
+    const dbResult = await testConnection();
+    const latencyMs = Date.now() - startTime;
+
+    if (dbResult.success) {
+      res.json({
+        status: "ok",
+        latencyMs,
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: true,
+          serverTime: dbResult.serverTime,
+          version: dbResult.version
+        }
+      });
+    } else {
+      res.status(503).json({
+        status: "fail",
+        latencyMs,
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: false,
+          error: dbResult.error
+        }
+      });
+    }
+  } catch (error) {
+    const latencyMs = Date.now() - startTime;
+
+    res.status(503).json({
+      status: "fail",
+      latencyMs,
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: false,
+        error: error.message
+      }
+    });
+  }
 });
 
 // API routes
