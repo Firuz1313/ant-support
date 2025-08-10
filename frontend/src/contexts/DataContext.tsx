@@ -1304,6 +1304,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     }
   }, [api]);
 
+  // Загружаем данные при монтировании компонента
+  useEffect(() => {
+    // Добавляем небольшую задержку чтобы дать время API подключиться
+    const timer = setTimeout(() => {
+      refreshData();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [refreshData]);
+
   const clearCache = useCallback((): void => {
     // No localStorage caching anymore - refresh data from API
     setDevices([]);
