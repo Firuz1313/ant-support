@@ -1,7 +1,5 @@
 import { APIResponse, PaginatedResponse, FilterOptions } from "../types";
 
-// Force recompilation - 2025-01-30
-
 export interface ApiClientConfig {
   baseUrl: string;
   timeout?: number;
@@ -244,8 +242,17 @@ export class ApiClient {
   }
 }
 
-// Create default API client instance
+// Create default API client instance using environment variable
 const getApiBaseUrl = (): string => {
+  // Приоритет для переменной окружения
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  if (envUrl) {
+    console.log("🔗 Using environment API URL:", envUrl);
+    return envUrl;
+  }
+
+  // Fallback для разных сред
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     const port = window.location.port;
@@ -254,16 +261,15 @@ const getApiBaseUrl = (): string => {
 
     // В облачной среде fly.dev/builder.codes
     if (hostname.includes("builder.codes") || hostname.includes("fly.dev")) {
-      // Сначала пробуем proxy
       const proxyUrl = "/api";
-      console.log("🌩️ Cloud environment - trying proxy URL:", proxyUrl);
+      console.log("🌩️ Cloud environment - using proxy URL:", proxyUrl);
       return proxyUrl;
     }
 
-    // Локальн��я разработка - прямое подключение к бэкенду
+    // Локальная разработка - прямое подключение к бэкенду
     if (hostname === "localhost" && port === "8080") {
       const directUrl = "http://localhost:3000/api";
-      console.log("🏠 Local development - using direct connection:", directUrl);
+      console.log("🏠 Local development - direct connection:", directUrl);
       return directUrl;
     }
   }
@@ -278,6 +284,7 @@ const API_BASE_URL = getApiBaseUrl();
 
 console.log("=== API Configuration ===");
 console.log("API Base URL:", API_BASE_URL);
+console.log("Environment URL:", import.meta.env.VITE_API_BASE_URL);
 console.log("========================");
 
 export const apiClient = new ApiClient({

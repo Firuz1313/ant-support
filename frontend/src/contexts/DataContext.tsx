@@ -345,6 +345,11 @@ interface DataProviderProps {
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [api] = useState(new APIService());
 
+  // Загружаем данные при монтировании компонента
+  useEffect(() => {
+    refreshData();
+  }, []);
+
   // Loading states
   const [loading, setLoading] = useState({
     devices: false,
@@ -960,7 +965,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       if (remote.isDefault) {
         return {
           canDelete: false,
-          reason: "Нельзя удалить пульт по умолчанию",
+          reason: "Нельзя удалит�� пульт по умолчанию",
         };
       }
 
@@ -1237,8 +1242,49 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   // Utility operations
   const refreshData = useCallback(async (): Promise<void> => {
-    console.log("Refreshing data...");
-  }, []);
+    console.log("Refreshing all data from API...");
+
+    try {
+      // Загружаем все данные параллельно
+      const [devicesResult, problemsResult, stepsResult, remotesResult] = await Promise.allSettled([
+        api.getAll<Device>("devices"),
+        api.getAll<Problem>("problems"),
+        api.getAll<Step>("steps"),
+        api.getAll<Remote>("remotes")
+      ]);
+
+      if (devicesResult.status === "fulfilled" && devicesResult.value.success) {
+        setDevices(devicesResult.value.data || []);
+        console.log("✅ Devices loaded from API:", devicesResult.value.data?.length);
+      } else {
+        console.error("❌ Failed to load devices:", devicesResult);
+      }
+
+      if (problemsResult.status === "fulfilled" && problemsResult.value.success) {
+        setProblems(problemsResult.value.data || []);
+        console.log("✅ Problems loaded from API:", problemsResult.value.data?.length);
+      } else {
+        console.error("❌ Failed to load problems:", problemsResult);
+      }
+
+      if (stepsResult.status === "fulfilled" && stepsResult.value.success) {
+        setSteps(stepsResult.value.data || []);
+        console.log("✅ Steps loaded from API:", stepsResult.value.data?.length);
+      } else {
+        console.error("❌ Failed to load steps:", stepsResult);
+      }
+
+      if (remotesResult.status === "fulfilled" && remotesResult.value.success) {
+        setRemotes(remotesResult.value.data || []);
+        console.log("✅ Remotes loaded from API:", remotesResult.value.data?.length);
+      } else {
+        console.error("❌ Failed to load remotes:", remotesResult);
+      }
+
+    } catch (error) {
+      console.error("❌ Error refreshing data:", error);
+    }
+  }, [api]);
 
   const clearCache = useCallback((): void => {
     // No localStorage caching anymore - refresh data from API
