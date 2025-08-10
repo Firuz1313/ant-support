@@ -4,7 +4,7 @@ import { deviceValidation, validateRequest } from '../middleware/validateRequest
 const deviceModel = new Device();
 
 /**
- * Контроллер для управления устрой��твами
+ * Контроллер для управления устройствами
  */
 class DeviceController {
   /**
@@ -38,13 +38,13 @@ class DeviceController {
       };
 
       // Прямые вызовы к БД - fail-fast при ошибках
-      const devices = (() => {
+      const devices = await (async () => {
         if (admin === 'true') {
-          return deviceModel.getForAdmin(filters, options);
+          return await deviceModel.getForAdmin(filters, options);
         } else if (include_stats === 'true') {
-          return deviceModel.findAllWithStats(filters, options);
+          return await deviceModel.findAllWithStats(filters, options);
         } else {
-          return deviceModel.findAll(filters, options);
+          return await deviceModel.findAll(filters, options);
         }
       })();
 
@@ -191,7 +191,7 @@ class DeviceController {
   }
 
   /**
-   * Удал��ние устройства
+   * Удаление устройства
    * DELETE /api/v1/devices/:id
    */
   async deleteDevice(req, res, next) {
@@ -416,7 +416,7 @@ class DeviceController {
   }
 
   /**
-   * Экс��орт устройств
+   * Экспорт устройств
    * GET /api/v1/devices/export
    */
   async exportDevices(req, res, next) {
