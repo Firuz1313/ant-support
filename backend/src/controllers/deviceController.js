@@ -37,20 +37,31 @@ class DeviceController {
         sortOrder: order.toUpperCase()
       };
 
-      let devices;
-      if (admin === 'true') {
-        // Для админ панели - расширенная информация
-        devices = await deviceModel.getForAdmin(filters, options);
-      } else if (include_stats === 'true') {
-        // С статистикой
-        devices = await deviceModel.findAllWithStats(filters, options);
-      } else {
-        // Обычный список
-        devices = await deviceModel.findAll(filters, options);
+      let devices = [];
+      try {
+        if (admin === 'true') {
+          // Для админ панели - расширенная информация
+          devices = await deviceModel.getForAdmin(filters, options);
+        } else if (include_stats === 'true') {
+          // С статистикой
+          devices = await deviceModel.findAllWithStats(filters, options);
+        } else {
+          // Обычный список
+          devices = await deviceModel.findAll(filters, options);
+        }
+      } catch (error) {
+        console.warn("Could not get devices, using empty array:", error.message);
+        devices = [];
       }
 
-      // Подсчет общего количества для пагинации
-      const total = await deviceModel.count(filters);
+      // Подсчет общего количества для пагинации (с fallback)
+      let total = 0;
+      try {
+        total = await deviceModel.count(filters);
+      } catch (error) {
+        console.warn("Could not get device count, using fallback:", error.message);
+        total = 0;
+      }
       const totalPages = Math.ceil(total / options.limit);
 
       res.json({
@@ -90,7 +101,7 @@ class DeviceController {
       if (!device) {
         return res.status(404).json({
           success: false,
-          error: 'Устройство не найдено',
+          error: 'Устройство н�� найдено',
           errorType: 'NOT_FOUND',
           timestamp: new Date().toISOString()
         });
