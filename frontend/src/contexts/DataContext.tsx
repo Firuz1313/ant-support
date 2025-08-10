@@ -359,16 +359,6 @@ interface DataProviderProps {
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [api] = useState(new APIService());
 
-  // Загружаем данные при монтировании компонента
-  useEffect(() => {
-    // Добавляем небольшую задержку чтобы дать время API подключиться
-    const timer = setTimeout(() => {
-      refreshData();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [refreshData]);
-
   // Loading states
   const [loading, setLoading] = useState({
     devices: false,
