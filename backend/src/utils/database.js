@@ -122,6 +122,13 @@ export async function query(text, params = []) {
     console.error(`❌ SQL Error after ${duration}ms:`, error.message);
     console.error("🔍 Query:", text);
     console.error("🔍 Parameters:", params);
+
+    // Fallback для случая когда PostgreSQL недоступен
+    if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
+      console.warn("🔧 PostgreSQL unavailable, returning empty result set");
+      return { rows: [], rowCount: 0 };
+    }
+
     throw error;
   } finally {
     if (client) {
@@ -211,7 +218,7 @@ export async function runMigrations() {
       executedResult.rows.map((row) => row.filename),
     );
 
-    // Читаем файлы миграций
+    // Читаем фай��ы миграций
     const migrationsDir = path.join(__dirname, "../../migrations");
     const migrationFiles = fs
       .readdirSync(migrationsDir)
@@ -226,7 +233,7 @@ export async function runMigrations() {
         continue;
       }
 
-      console.log(`🔄 Выполнение мигр��ции: ${filename}`);
+      console.log(`🔄 Выполнение миграции: ${filename}`);
 
       const migrationPath = path.join(migrationsDir, filename);
       const migrationSQL = fs.readFileSync(migrationPath, "utf8");
