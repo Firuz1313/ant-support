@@ -1323,7 +1323,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     setStepActions([]);
     setSiteSettings(defaultSiteSettings);
     refreshData(); // Reload from API
-  }, []);
+  }, [refreshData]);
 
   const getEntityStats = useCallback(
     (entity: string) => {
