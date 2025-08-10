@@ -13,17 +13,13 @@ dotenv.config();
 
 const { Pool, Client } = pkg;
 
-// Check if we should use mock database
-const USE_MOCK_DB =
-  process.env.USE_MOCK_DB === "true" || process.env.NODE_ENV === "mock";
-
-// Конфигурация подключения к PostgreSQL
+// Конфигурация подключения к PostgreSQL - только real DB
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME || "ant_support",
+  database: process.env.DB_NAME || "localhost",
   user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "password",
+  password: process.env.DB_PASSWORD || "postgres",
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 
   // Настройки pool соединений
@@ -33,6 +29,14 @@ const dbConfig = {
   connectionTimeoutMillis: 5000, // таймаут подключения
   maxUses: 7500, // максимальное количество использований соединения
 };
+
+console.log("🔧 PostgreSQL Configuration:");
+console.log(`📊 Host: ${dbConfig.host}:${dbConfig.port}`);
+console.log(`📊 Database: ${dbConfig.database}`);
+console.log(`📊 User: ${dbConfig.user}`);
+console.log(`📊 SSL: ${dbConfig.ssl ? "enabled" : "disabled"}`);
+console.log(`📊 Pool: ${dbConfig.min}-${dbConfig.max} connections`);
+console.log(`📊 PostgreSQL only mode - no mock database`);
 
 // Создание pool соединений
 const pool = new Pool(dbConfig);
@@ -58,19 +62,8 @@ pool.on("release", (client) => {
   }
 });
 
-// Import mock database if needed
-let mockDb = null;
-if (USE_MOCK_DB) {
-  mockDb = await import("./mockDatabase.js");
-  console.log("🔧 Using mock database for development");
-}
-
 // Функция проверки подключения к базе данных
 export async function testConnection() {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.testConnection();
-  }
-
   let client;
   try {
     client = await pool.connect();
@@ -91,15 +84,6 @@ export async function testConnection() {
     };
   } catch (error) {
     console.error("❌ Ошибка подключения к PostgreSQL:", error.message);
-
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      mockDb = await import("./mockDatabase.js");
-      return await mockDb.testConnection();
-    }
-
     return {
       success: false,
       error: error.message,
@@ -113,10 +97,6 @@ export async function testConnection() {
 
 // Функция выполнения запроса с логированием
 export async function query(text, params = []) {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.query(text, params);
-  }
-
   const start = Date.now();
   let client;
 
@@ -142,17 +122,6 @@ export async function query(text, params = []) {
     console.error(`❌ SQL Error after ${duration}ms:`, error.message);
     console.error("🔍 Query:", text);
     console.error("🔍 Parameters:", params);
-
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      if (!mockDb) {
-        mockDb = await import("./mockDatabase.js");
-      }
-      return await mockDb.query(text, params);
-    }
-
     throw error;
   } finally {
     if (client) {
@@ -163,10 +132,6 @@ export async function query(text, params = []) {
 
 // Функция выполнения транзакции
 export async function transaction(callback) {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.transaction(callback);
-  }
-
   let client;
 
   try {
@@ -190,10 +155,6 @@ export async function transaction(callback) {
 
 // Функция создания базы данных (если не существует)
 export async function createDatabase() {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.createDatabase();
-  }
-
   const adminConfig = {
     ...dbConfig,
     database: "postgres", // подключаемся к системной БД для создания новой
@@ -220,15 +181,6 @@ export async function createDatabase() {
     }
   } catch (error) {
     console.error("❌ Ошибка создания базы данных:", error.message);
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      if (!mockDb) {
-        mockDb = await import("./mockDatabase.js");
-      }
-      return await mockDb.createDatabase();
-    }
     throw error;
   } finally {
     if (client) {
@@ -274,7 +226,7 @@ export async function runMigrations() {
         continue;
       }
 
-      console.log(`🔄 Выполнение миграции: ${filename}`);
+      console.log(`🔄 Выполнение мигр��ции: ${filename}`);
 
       const migrationPath = path.join(migrationsDir, filename);
       const migrationSQL = fs.readFileSync(migrationPath, "utf8");
@@ -344,110 +296,6 @@ export async function closePool() {
   }
 }
 
-// Функция очистки старых данных (maintenance)
-export async function cleanupOldData(daysToKeep = 90) {
-  try {
-    console.log(`🧹 Очистка данных старше ${daysToKeep} дней...`);
-
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-
-    // Удаляем старые сессии
-    const sessionsResult = await query(
-      `
-      DELETE FROM diagnostic_sessions 
-      WHERE start_time < $1 AND end_time IS NOT NULL
-    `,
-      [cutoffDate],
-    );
-
-    // Удаляем старые логи изменений
-    const logsResult = await query(
-      `
-      DELETE FROM change_logs 
-      WHERE created_at < $1
-    `,
-      [cutoffDate],
-    );
-
-    console.log(`✅ Удалено сессий: ${sessionsResult.rowCount}`);
-    console.log(`✅ Удалено логов: ${logsResult.rowCount}`);
-
-    // Обновляем статистику
-    await query("ANALYZE");
-
-    return {
-      deletedSessions: sessionsResult.rowCount,
-      deletedLogs: logsResult.rowCount,
-    };
-  } catch (error) {
-    console.error("❌ Ошибка очистки данных:", error.message);
-    throw error;
-  }
-}
-
-// Функция для полнотекстового поиска
-export async function searchText(
-  searchTerm,
-  tables = ["problems", "devices", "diagnostic_steps"],
-) {
-  try {
-    const searchResults = {};
-
-    for (const table of tables) {
-      let searchQuery;
-
-      switch (table) {
-        case "problems":
-          searchQuery = `
-            SELECT id, title, description, 
-                   ts_rank(to_tsvector('russian', title || ' ' || COALESCE(description, '')), plainto_tsquery('russian', $1)) as rank
-            FROM problems 
-            WHERE to_tsvector('russian', title || ' ' || COALESCE(description, '')) @@ plainto_tsquery('russian', $1)
-            AND is_active = true
-            ORDER BY rank DESC
-            LIMIT 20
-          `;
-          break;
-
-        case "devices":
-          searchQuery = `
-            SELECT id, name, brand, model, description,
-                   ts_rank(to_tsvector('russian', name || ' ' || brand || ' ' || COALESCE(description, '')), plainto_tsquery('russian', $1)) as rank
-            FROM devices
-            WHERE to_tsvector('russian', name || ' ' || brand || ' ' || COALESCE(description, '')) @@ plainto_tsquery('russian', $1)
-            AND is_active = true
-            ORDER BY rank DESC
-            LIMIT 20
-          `;
-          break;
-
-        case "diagnostic_steps":
-          searchQuery = `
-            SELECT id, title, description, instruction,
-                   ts_rank(to_tsvector('russian', title || ' ' || COALESCE(description, '') || ' ' || instruction), plainto_tsquery('russian', $1)) as rank
-            FROM diagnostic_steps
-            WHERE to_tsvector('russian', title || ' ' || COALESCE(description, '') || ' ' || instruction) @@ plainto_tsquery('russian', $1)
-            AND is_active = true
-            ORDER BY rank DESC
-            LIMIT 20
-          `;
-          break;
-      }
-
-      if (searchQuery) {
-        const result = await query(searchQuery, [searchTerm]);
-        searchResults[table] = result.rows;
-      }
-    }
-
-    return searchResults;
-  } catch (error) {
-    console.error("❌ Ошибка полнотекстового пои��ка:", error.message);
-    throw error;
-  }
-}
-
 // Экспорт pool для прямого использования в случае необходимости
 export { pool };
 
@@ -459,7 +307,5 @@ export default {
   runMigrations,
   getDatabaseStats,
   closePool,
-  cleanupOldData,
-  searchText,
   pool,
 };
