@@ -13,20 +13,73 @@ const router = express.Router();
 const API_V1_PREFIX = "/v1";
 
 /**
- * Health check endpoint
- * @route GET /api/health
- * @desc Проверка состояния API
+ * Health check endpoint - basic health
+ * @route GET /health
+ * @desc Проверка что сервис жив
  * @access Public
  */
 router.get("/health", (req, res) => {
   res.json({
-    success: true,
-    message: "ANT Support API работает",
-    version: "1.0.0",
+    status: "ok",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || "development",
+    environment: process.env.APP_ENV || "local",
+    version: "1.0.0"
   });
+});
+
+/**
+ * Database health check endpoint
+ * @route GET /health/db
+ * @desc Проверка подключения к базе данных с latency
+ * @access Public
+ */
+router.get("/health/db", async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    // Импортируем database утилиты
+    const { testConnection } = await import("../utils/database.js");
+
+    // Тестируем подключение
+    const dbResult = await testConnection();
+    const latencyMs = Date.now() - startTime;
+
+    if (dbResult.success) {
+      res.json({
+        status: "ok",
+        latencyMs,
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: true,
+          serverTime: dbResult.serverTime,
+          version: dbResult.version
+        }
+      });
+    } else {
+      res.status(503).json({
+        status: "fail",
+        latencyMs,
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: false,
+          error: dbResult.error
+        }
+      });
+    }
+  } catch (error) {
+    const latencyMs = Date.now() - startTime;
+
+    res.status(503).json({
+      status: "fail",
+      latencyMs,
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: false,
+        error: error.message
+      }
+    });
+  }
 });
 
 /**
