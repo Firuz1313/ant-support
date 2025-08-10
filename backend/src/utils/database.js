@@ -13,13 +13,29 @@ dotenv.config();
 
 const { Pool, Client } = pkg;
 
-// Конфигурация подключения к PostgreSQL - ��олько real DB
+// Strict .env validation - все ключи обязательны
+function validateRequiredEnvVars() {
+  const required = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_SSL'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    console.error('❌ FATAL: Missing required environment variables:');
+    missing.forEach(key => console.error(`   - ${key}`));
+    console.error('❌ Server cannot start without PostgreSQL configuration');
+    process.exit(1);
+  }
+}
+
+// Validate environment on module load
+validateRequiredEnvVars();
+
+// Конфигурация подключения к PostgreSQL - ТОЛЬКО real DB, никаких fallback
 const dbConfig = {
-  host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME || "localhost",
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "postgres",
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 
   // Настройки pool соединений
@@ -30,24 +46,26 @@ const dbConfig = {
   maxUses: 7500, // максимальное количество использований соединения
 };
 
-console.log("🔧 PostgreSQL Configuration:");
+console.log("🔧 PostgreSQL Configuration (STRICT MODE - NO FALLBACKS):");
 console.log(`📊 Host: ${dbConfig.host}:${dbConfig.port}`);
 console.log(`📊 Database: ${dbConfig.database}`);
 console.log(`📊 User: ${dbConfig.user}`);
 console.log(`📊 SSL: ${dbConfig.ssl ? "enabled" : "disabled"}`);
 console.log(`📊 Pool: ${dbConfig.min}-${dbConfig.max} connections`);
-console.log(`📊 PostgreSQL only mode - no mock database`);
+console.log(`📊 FAIL-FAST MODE: Server will terminate if DB unavailable`);
 
 // Создание pool соединений
 const pool = new Pool(dbConfig);
 
 // Обработка событий pool
 pool.on("connect", (client) => {
-  console.log("📊 Новое подключение к PostgreSQL установлено");
+  console.log(`📊 DB connected: host=${dbConfig.host} db=${dbConfig.database} pool=active`);
 });
 
 pool.on("error", (err, client) => {
-  console.error("📊 Ошибка подключения к PostgreSQL:", err.message);
+  console.error("📊 FATAL PostgreSQL pool error:", err.message);
+  console.error("📊 Server will terminate due to database failure");
+  process.exit(1); // FAIL-FAST при ошибках pool
 });
 
 pool.on("acquire", (client) => {
@@ -62,7 +80,7 @@ pool.on("release", (client) => {
   }
 });
 
-// Функция проверки подключения к базе данных
+// Функция проверки подключения к базе данных с fail-fast
 export async function testConnection() {
   let client;
   try {
@@ -83,11 +101,8 @@ export async function testConnection() {
       version: result.rows[0].postgres_version,
     };
   } catch (error) {
-    console.error("❌ Ошибка подключения к PostgreSQL:", error.message);
-    return {
-      success: false,
-      error: error.message,
-    };
+    console.error("❌ FATAL: PostgreSQL connection failed:", error.message);
+    throw error; // FAIL-FAST: пробрасываем ошибку дальше
   } finally {
     if (client) {
       client.release();
@@ -95,7 +110,7 @@ export async function testConnection() {
   }
 }
 
-// Функция выполнения запроса с логированием
+// Функция выполнения запроса БЕЗ FALLBACK - fail-fast при ошибках
 export async function query(text, params = []) {
   const start = Date.now();
   let client;
@@ -119,26 +134,11 @@ export async function query(text, params = []) {
     return result;
   } catch (error) {
     const duration = Date.now() - start;
-    console.error(`❌ SQL Error after ${duration}ms:`, error.message);
+    console.error(`❌ FATAL SQL Error after ${duration}ms:`, error.message);
     console.error("🔍 Query:", text);
     console.error("🔍 Parameters:", params);
-
-    // Fallback для случая когда PostgreSQL недоступен
-    if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
-      console.warn("🔧 PostgreSQL unavailable, returning empty result set");
-
-      // Определяем тип запроса для возврата соответствующего fallback
-      const lowerText = text.toLowerCase().trim();
-
-      if (lowerText.includes('count(') || lowerText.includes('count *')) {
-        // Для COUNT запросов возвращаем 0
-        return { rows: [{ count: 0 }], rowCount: 1 };
-      } else {
-        // Для SELECT запросов возвращаем пустой массив
-        return { rows: [], rowCount: 0 };
-      }
-    }
-
+    
+    // FAIL-FAST: Никаких fallback, сразу пробрасываем ошибку
     throw error;
   } finally {
     if (client) {
@@ -197,7 +197,7 @@ export async function createDatabase() {
       console.log(`📊 База данных ${dbConfig.database} уже существует`);
     }
   } catch (error) {
-    console.error("❌ Ошибка создания базы данных:", error.message);
+    console.error("❌ FATAL: Ошибка создания базы данных:", error.message);
     throw error;
   } finally {
     if (client) {
@@ -220,7 +220,7 @@ export async function runMigrations() {
       )
     `);
 
-    // Получаем список выполненных миграций
+    // По��учаем список выполненных миграций
     const executedResult = await query(
       "SELECT filename FROM migrations ORDER BY id",
     );
@@ -230,6 +230,13 @@ export async function runMigrations() {
 
     // Читаем файлы миграций
     const migrationsDir = path.join(__dirname, "../../migrations");
+    
+    // Проверяем существование папки миграций
+    if (!fs.existsSync(migrationsDir)) {
+      console.log("📁 Папка миграций не найдена, создаём пустую");
+      return;
+    }
+    
     const migrationFiles = fs
       .readdirSync(migrationsDir)
       .filter((file) => file.endsWith(".sql"))
@@ -263,7 +270,7 @@ export async function runMigrations() {
 
     console.log("🎉 Все миграции выполнены успешно");
   } catch (error) {
-    console.error("❌ Ошибка выполнения миграций:", error.message);
+    console.error("❌ FATAL: Ошибка выполнения миграций:", error.message);
     throw error;
   }
 }
@@ -297,7 +304,7 @@ export async function getDatabaseStats() {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("❌ Ошибка получения статистики БД:", error.message);
+    console.error("❌ FATAL: Ошибка получения статистики БД:", error.message);
     throw error;
   }
 }
@@ -313,6 +320,19 @@ export async function closePool() {
   }
 }
 
+// Fail-fast initialization test
+export async function initializeDatabase() {
+  try {
+    console.log("🔄 Initializing database connection...");
+    await testConnection();
+    console.log("✅ Database initialization successful");
+  } catch (error) {
+    console.error("❌ FATAL: Database initialization failed");
+    console.error("❌ Server cannot start without database connection");
+    process.exit(1);
+  }
+}
+
 // Экспорт pool для прямого использования в случае необходимости
 export { pool };
 
@@ -324,5 +344,6 @@ export default {
   runMigrations,
   getDatabaseStats,
   closePool,
+  initializeDatabase,
   pool,
 };
