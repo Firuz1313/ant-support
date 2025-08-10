@@ -45,13 +45,27 @@ class APIService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        console.warn(`API Warning [${endpoint}]:`, errorMessage);
+
+        // Возвращаем стандартный failed response вместо throw
+        return {
+          success: false,
+          error: errorMessage,
+          data: undefined as any,
+        };
       }
 
       return data;
     } catch (error) {
-      console.error(`API Error [${endpoint}]:`, error);
-      throw error;
+      console.warn(`API Warning [${endpoint}]:`, error instanceof Error ? error.message : 'Unknown error');
+
+      // Возвращаем стандартный failed response
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Network or parsing error',
+        data: undefined as any,
+      };
     }
   }
 
