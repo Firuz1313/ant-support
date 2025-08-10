@@ -1264,11 +1264,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     console.log("Refreshing all data from API...");
 
     try {
-      // Загружаем только существующие эндпоинты
-      const [devicesResult, problemsResult, stepsResult] = await Promise.allSettled([
+      // Загружаем все доступные эндпоинты
+      const [devicesResult, problemsResult, stepsResult, remotesResult] = await Promise.allSettled([
         api.getAll<Device>("devices"),
         api.getAll<Problem>("problems"),
-        api.getAll<Step>("steps")
+        api.getAll<Step>("steps"),
+        api.getAll<Remote>("remotes")
       ]);
 
       if (devicesResult.status === "fulfilled" && devicesResult.value.success) {
@@ -1276,7 +1277,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         console.log("✅ Devices loaded from API:", devicesResult.value.data?.length);
       } else {
         console.warn("⚠️ Could not load devices (server error or no database)");
-        setDevices([]); // Устанавливаем пустой массив при ошибке
+        setDevices([]); // Уст��навливаем пустой массив при ошибке
       }
 
       if (problemsResult.status === "fulfilled" && problemsResult.value.success) {
@@ -1295,9 +1296,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setSteps([]);
       }
 
-      // Remotes эндпоинт не существует в backend, оставляем пустым
-      setRemotes([]);
-      console.log("ℹ️ Remotes endpoint not available in backend, using empty array");
+      if (remotesResult.status === "fulfilled" && remotesResult.value.success) {
+        setRemotes(remotesResult.value.data || []);
+        console.log("✅ Remotes loaded from API:", remotesResult.value.data?.length);
+      } else {
+        console.warn("⚠️ Could not load remotes (placeholder endpoint)");
+        setRemotes([]);
+      }
 
     } catch (error) {
       console.error("❌ Error refreshing data:", error);
