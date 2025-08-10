@@ -161,7 +161,7 @@ const defaultSiteSettings: SiteSettings = {
   id: "settings",
   siteName: "ANT Support",
   siteDescription:
-    "Профессиональ��ая платформа для диагностики цифр��вых ТВ-приставок",
+    "Профессиональ��ая платформа для ��иагностики цифр��вых ТВ-приставок",
   defaultLanguage: "ru",
   supportedLanguages: ["ru", "tj", "uz"],
   theme: "professional",
@@ -347,8 +347,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   // Загружаем данные при монтировании компонента
   useEffect(() => {
-    refreshData();
-  }, []);
+    // Добавляем небольшую задержку чтобы дать время API подключиться
+    const timer = setTimeout(() => {
+      refreshData();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [refreshData]);
 
   // Loading states
   const [loading, setLoading] = useState({
@@ -965,7 +970,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       if (remote.isDefault) {
         return {
           canDelete: false,
-          reason: "Нельзя удалит�� пульт по умолчанию",
+          reason: "Нельзя удалить пульт по умолчанию",
         };
       }
 
@@ -1245,44 +1250,48 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     console.log("Refreshing all data from API...");
 
     try {
-      // Загружаем все данные параллельно
-      const [devicesResult, problemsResult, stepsResult, remotesResult] = await Promise.allSettled([
+      // Загружаем только существующие эндпоинты
+      const [devicesResult, problemsResult, stepsResult] = await Promise.allSettled([
         api.getAll<Device>("devices"),
         api.getAll<Problem>("problems"),
-        api.getAll<Step>("steps"),
-        api.getAll<Remote>("remotes")
+        api.getAll<Step>("steps")
       ]);
 
       if (devicesResult.status === "fulfilled" && devicesResult.value.success) {
         setDevices(devicesResult.value.data || []);
         console.log("✅ Devices loaded from API:", devicesResult.value.data?.length);
       } else {
-        console.error("❌ Failed to load devices:", devicesResult);
+        console.warn("⚠️ Could not load devices (server error or no database)");
+        setDevices([]); // Устанавливаем пустой массив при ошибке
       }
 
       if (problemsResult.status === "fulfilled" && problemsResult.value.success) {
         setProblems(problemsResult.value.data || []);
         console.log("✅ Problems loaded from API:", problemsResult.value.data?.length);
       } else {
-        console.error("❌ Failed to load problems:", problemsResult);
+        console.warn("⚠️ Could not load problems (server error or no database)");
+        setProblems([]);
       }
 
       if (stepsResult.status === "fulfilled" && stepsResult.value.success) {
         setSteps(stepsResult.value.data || []);
         console.log("✅ Steps loaded from API:", stepsResult.value.data?.length);
       } else {
-        console.error("❌ Failed to load steps:", stepsResult);
+        console.warn("⚠️ Could not load steps (server error or no database)");
+        setSteps([]);
       }
 
-      if (remotesResult.status === "fulfilled" && remotesResult.value.success) {
-        setRemotes(remotesResult.value.data || []);
-        console.log("✅ Remotes loaded from API:", remotesResult.value.data?.length);
-      } else {
-        console.error("❌ Failed to load remotes:", remotesResult);
-      }
+      // Remotes эндпоинт не существует в backend, оставляем пустым
+      setRemotes([]);
+      console.log("ℹ️ Remotes endpoint not available in backend, using empty array");
 
     } catch (error) {
       console.error("❌ Error refreshing data:", error);
+      // При полной ошибке устанавливаем пустые массивы
+      setDevices([]);
+      setProblems([]);
+      setSteps([]);
+      setRemotes([]);
     }
   }, [api]);
 
