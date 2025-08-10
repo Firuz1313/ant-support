@@ -89,7 +89,35 @@ class TVInterface extends BaseModel {
       }
 
       const result = await this.query(query, params);
-      return result.rows;
+
+      // Parse JSON fields for each TV interface
+      const processedRows = result.rows.map(tvInterface => {
+        // Parse clickable_areas
+        if (tvInterface.clickable_areas) {
+          try {
+            tvInterface.clickable_areas = JSON.parse(tvInterface.clickable_areas);
+          } catch (e) {
+            tvInterface.clickable_areas = [];
+          }
+        } else {
+          tvInterface.clickable_areas = [];
+        }
+
+        // Parse highlight_areas
+        if (tvInterface.highlight_areas) {
+          try {
+            tvInterface.highlight_areas = JSON.parse(tvInterface.highlight_areas);
+          } catch (e) {
+            tvInterface.highlight_areas = [];
+          }
+        } else {
+          tvInterface.highlight_areas = [];
+        }
+
+        return tvInterface;
+      });
+
+      return processedRows;
     } catch (error) {
       console.error("Error getting TV interfaces:", error);
       throw error;
