@@ -37,6 +37,7 @@ This project consists of two main parts:
 - Node.js (v16 or higher)
 - npm or yarn
 - Git
+- **PostgreSQL** (обязательно для работы системы)
 
 ### Installation
 
@@ -58,30 +59,54 @@ This project consists of two main parts:
    npm install
    ```
 
-4. **Set up the database**
+4. **Configure environment variables**
    ```bash
-   cd ../backend
-   npm run migrate
-   npm run seed
+   # Backend
+   cd backend
+   cp .env.example .env
+   # Настройте подключение к PostgreSQL в .env
+
+   # Frontend
+   cd ../frontend
+   cp .env.example .env
+   # При необходимости настройте VITE_API_BASE_URL
+   ```
+
+5. **Set up PostgreSQL database**
+   ```bash
+   # Убедитесь что PostgreSQL запущен
+   # Создайте базу данных указанную в backend/.env
+   cd backend
+   npm run db:init
+   npm run db:migrate
    ```
 
 ### Running the Application
 
-1. **Start the backend server**
+1. **Start PostgreSQL** (должен быть запущен)
+
+2. **Start the backend server**
    ```bash
    cd backend
    npm start
    ```
 
-2. **Start the frontend development server**
+3. **Start the frontend development server**
    ```bash
    cd frontend
    npm run dev
    ```
 
-3. **Access the application**
-   - Frontend: http://localhost:5173
+4. **Access the application**
+   - Frontend: http://localhost:8080
    - Backend API: http://localhost:3000
+   - Health check: http://localhost:3000/health
+   - Database health: http://localhost:3000/health/db
+
+### Health Checks
+
+- `GET /health` - п��оверка что сервис жив
+- `GET /health/db` - проверка подключения к PostgreSQL с latency
 
 ## API Endpoints
 
