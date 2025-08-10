@@ -1,11 +1,10 @@
 import Device from '../models/Device.js';
 import { deviceValidation, validateRequest } from '../middleware/validateRequest.js';
-import { safeDatabaseCall } from '../middleware/databaseFallback.js';
 
 const deviceModel = new Device();
 
 /**
- * Контроллер для управления устройствами
+ * Контроллер для управления устрой��твами
  */
 class DeviceController {
   /**
@@ -38,20 +37,18 @@ class DeviceController {
         sortOrder: order.toUpperCase()
       };
 
-      // Используем безопасные вызовы к БД
-      const devices = await safeDatabaseCall(async () => {
+      // Прямые вызовы к БД - fail-fast при ошибках
+      const devices = (() => {
         if (admin === 'true') {
-          return await deviceModel.getForAdmin(filters, options);
+          return deviceModel.getForAdmin(filters, options);
         } else if (include_stats === 'true') {
-          return await deviceModel.findAllWithStats(filters, options);
+          return deviceModel.findAllWithStats(filters, options);
         } else {
-          return await deviceModel.findAll(filters, options);
+          return deviceModel.findAll(filters, options);
         }
-      }, []);
+      })();
 
-      const total = await safeDatabaseCall(async () => {
-        return await deviceModel.count(filters);
-      }, 0);
+      const total = await deviceModel.count(filters);
       const totalPages = Math.ceil(total / options.limit);
 
       res.json({
@@ -194,7 +191,7 @@ class DeviceController {
   }
 
   /**
-   * Удаление устройства
+   * Удал��ние устройства
    * DELETE /api/v1/devices/:id
    */
   async deleteDevice(req, res, next) {
@@ -419,7 +416,7 @@ class DeviceController {
   }
 
   /**
-   * Экспорт устройств
+   * Экс��орт устройств
    * GET /api/v1/devices/export
    */
   async exportDevices(req, res, next) {
