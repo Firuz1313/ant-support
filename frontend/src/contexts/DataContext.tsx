@@ -357,66 +357,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // Error states
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Data states
-  const [devices, setDevices] = useState<Device[]>(() => {
-    const stored = localStorage.getItem("ant-support-devices");
-    return stored ? JSON.parse(stored) : defaultDevices;
-  });
-
-  const [problems, setProblems] = useState<Problem[]>(() => {
-    const stored = localStorage.getItem("ant-support-problems");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [steps, setSteps] = useState<Step[]>(() => {
-    const stored = localStorage.getItem("ant-support-steps");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [remotes, setRemotes] = useState<Remote[]>(() => {
-    const stored = localStorage.getItem("ant-support-remotes");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [stepActions, setStepActions] = useState<StepAction[]>(() => {
-    const stored = localStorage.getItem("ant-support-step-actions");
-    return stored ? JSON.parse(stored) : [];
-  });
+  // Data states - no localStorage caching, all data from API
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [remotes, setRemotes] = useState<Remote[]>([]);
+  const [stepActions, setStepActions] = useState<StepAction[]>([]);
 
   const [sessions, setSessions] = useState<DiagnosticSession[]>([]);
   const [changeLogs, setChangeLogs] = useState<ChangeLog[]>([]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
-    const stored = localStorage.getItem("ant-support-settings");
-    return stored ? JSON.parse(stored) : defaultSiteSettings;
-  });
-
-  // Persistence effects
-  useEffect(() => {
-    localStorage.setItem("ant-support-devices", JSON.stringify(devices));
-  }, [devices]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-problems", JSON.stringify(problems));
-  }, [problems]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-steps", JSON.stringify(steps));
-  }, [steps]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-remotes", JSON.stringify(remotes));
-  }, [remotes]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ant-support-step-actions",
-      JSON.stringify(stepActions),
-    );
-  }, [stepActions]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-settings", JSON.stringify(siteSettings));
-  }, [siteSettings]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
 
   // Helper functions
   const generateId = () => {
@@ -1017,7 +967,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       if (usageCount > 0) {
         return {
           canDelete: false,
-          reason: `Пульт используется в ${usageCount} шагах диагностики`,
+          reason: `П��льт используется в ${usageCount} шагах диагностики`,
         };
       }
 
@@ -1291,13 +1241,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, []);
 
   const clearCache = useCallback((): void => {
-    localStorage.clear();
-    setDevices(defaultDevices);
+    // No localStorage caching anymore - refresh data from API
+    setDevices([]);
     setProblems([]);
     setSteps([]);
     setRemotes([]);
     setStepActions([]);
     setSiteSettings(defaultSiteSettings);
+    refreshData(); // Reload from API
   }, []);
 
   const getEntityStats = useCallback(
