@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+
 # Ant Support
 
 A comprehensive diagnostic and support system for TV interfaces and device management.
@@ -8,6 +9,7 @@ A comprehensive diagnostic and support system for TV interfaces and device manag
 This project consists of two main parts:
 
 ### Backend (`/backend`)
+
 - Node.js/Express server
 - SQLite database with Prisma ORM
 - RESTful API endpoints
@@ -15,6 +17,7 @@ This project consists of two main parts:
 - TV interface management system
 
 ### Frontend (`/frontend`)
+
 - React + TypeScript application
 - Vite build system
 - Tailwind CSS for styling
@@ -37,73 +40,108 @@ This project consists of two main parts:
 - Node.js (v16 or higher)
 - npm or yarn
 - Git
+- **PostgreSQL** (обязательно для работы системы)
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Firuz1313/ant-support.git
    cd ant-support
    ```
 
 2. **Install backend dependencies**
+
    ```bash
    cd backend
    npm install
    ```
 
 3. **Install frontend dependencies**
+
    ```bash
    cd ../frontend
    npm install
    ```
 
-4. **Set up the database**
+4. **Configure environment variables**
+
    ```bash
-   cd ../backend
-   npm run migrate
-   npm run seed
+   # Backend
+   cd backend
+   cp .env.example .env
+   # Настройте подключение к PostgreSQL в .env
+
+   # Frontend
+   cd ../frontend
+   cp .env.example .env
+   # При необходимости настройте VITE_API_BASE_URL
+   ```
+
+5. **Set up PostgreSQL database**
+   ```bash
+   # Убедитесь что PostgreSQL запущен
+   # Создайте базу данных указанную в backend/.env
+   cd backend
+   npm run db:init
+   npm run db:migrate
    ```
 
 ### Running the Application
 
-1. **Start the backend server**
+1. **Start PostgreSQL** (должен быть запущен)
+
+2. **Start the backend server**
+
    ```bash
    cd backend
    npm start
    ```
 
-2. **Start the frontend development server**
+3. **Start the frontend development server**
+
    ```bash
    cd frontend
    npm run dev
    ```
 
-3. **Access the application**
-   - Frontend: http://localhost:5173
+4. **Access the application**
+   - Frontend: http://localhost:8080
    - Backend API: http://localhost:3000
+   - Health check: http://localhost:3000/health
+   - Database health: http://localhost:3000/health/db
+
+### Health Checks
+
+- `GET /health` - п��оверка что сервис жив
+- `GET /health/db` - проверка подключения к PostgreSQL с latency
 
 ## API Endpoints
 
 ### Devices
+
 - `GET /api/devices` - Get all devices
 - `POST /api/devices` - Create new device
 - `PUT /api/devices/:id` - Update device
 - `DELETE /api/devices/:id` - Delete device
 
 ### Problems
+
 - `GET /api/problems` - Get all problems
 - `POST /api/problems` - Create new problem
 - `PUT /api/problems/:id` - Update problem
 - `DELETE /api/problems/:id` - Delete problem
 
 ### Sessions
+
 - `GET /api/sessions` - Get all sessions
 - `POST /api/sessions` - Create new session
 - `PUT /api/sessions/:id` - Update session
 - `DELETE /api/sessions/:id` - Delete session
 
 ### TV Interfaces
+
 - `GET /api/tv-interfaces` - Get all TV interfaces
 - `POST /api/tv-interfaces` - Create new TV interface
 - `PUT /api/tv-interfaces/:id` - Update TV interface
@@ -112,6 +150,7 @@ This project consists of two main parts:
 ## Technologies Used
 
 ### Backend
+
 - Node.js
 - Express.js
 - SQLite
@@ -120,6 +159,7 @@ This project consists of two main parts:
 - Error handling middleware
 
 ### Frontend
+
 - React 18
 - TypeScript
 - Vite
@@ -132,11 +172,13 @@ This project consists of two main parts:
 ## Development
 
 ### Code Style
+
 - Prettier for code formatting
 - ESLint for code linting
 - TypeScript for type safety
 
 ### Database
+
 - SQLite for development
 - Prisma migrations for schema changes
 - Seed data for testing
@@ -166,7 +208,8 @@ Firuz1313
 
 ## Support
 
-For support and questions, please open an issue on GitHub. 
-=======
+# For support and questions, please open an issue on GitHub.
+
 # ant-support
->>>>>>> 360f9eddece7f214db92b156a425dbae1d2c0ff3
+
+> > > > > > > 360f9eddece7f214db92b156a425dbae1d2c0ff3

@@ -1,265 +1,262 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Image as ImageIcon, 
-  Search, 
-  Upload, 
-  Check,
-  X,
-  FolderOpen,
-  Grid3X3,
-  List
-} from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react";
+import { X, Search, Grid, List, Download, Eye, Trash2 } from "lucide-react";
+
+interface Screenshot {
+  id: string;
+  deviceId: string;
+  name: string;
+  type:
+    | "home"
+    | "settings"
+    | "channels"
+    | "apps"
+    | "guide"
+    | "no-signal"
+    | "error"
+    | "custom";
+  url: string;
+  timestamp: string;
+  size: string;
+}
 
 interface ScreenshotBrowserProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectScreenshot: (screenshot: string) => void;
+  onSelectScreenshot: (screenshot: Screenshot) => void;
   currentDeviceId?: string;
 }
 
-// Mock data for demonstration - in real app, this would come from API
-const mockScreenshots = [
-  {
-    id: 'openbox_home_1',
-    deviceId: 'openbox',
-    name: 'Главное меню OpenBox',
-    type: 'home',
-    url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAlAEIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5/ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/9k=',
-    timestamp: '2024-01-15T10:30:00Z',
-    size: '1920x1080'
-  },
-  {
-    id: 'openbox_settings_1',
-    deviceId: 'openbox',
-    name: 'Настройки OpenBox',
-    type: 'settings',
-    url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAlAEIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5/ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/9k=',
-    timestamp: '2024-01-15T10:35:00Z',
-    size: '1920x1080'
-  },
-  {
-    id: 'uclan_home_1',
-    deviceId: 'uclan',
-    name: 'Главное меню UCLAN',
-    type: 'home',
-    url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAlAEIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5/ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/9k=',
-    timestamp: '2024-01-15T11:00:00Z',
-    size: '1920x1080'
-  },
-  {
-    id: 'hdbox_channels_1',
-    deviceId: 'hdbox',
-    name: 'Список каналов HDBox',
-    type: 'channels',
-    url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAlAEIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5/ooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/9k=',
-    timestamp: '2024-01-15T11:15:00Z',
-    size: '1920x1080'
-  }
-];
+// Screenshots будут загружаться из API, пока пустой массив
+const mockScreenshots: Screenshot[] = [];
 
 const typeColors = {
-  home: 'bg-blue-100 text-blue-800',
-  settings: 'bg-purple-100 text-purple-800',
-  channels: 'bg-green-100 text-green-800',
-  apps: 'bg-orange-100 text-orange-800',
-  guide: 'bg-indigo-100 text-indigo-800',
-  'no-signal': 'bg-red-100 text-red-800',
-  error: 'bg-red-100 text-red-800',
-  custom: 'bg-gray-100 text-gray-800'
+  home: "bg-blue-100 text-blue-800",
+  settings: "bg-purple-100 text-purple-800",
+  channels: "bg-green-100 text-green-800",
+  apps: "bg-orange-100 text-orange-800",
+  guide: "bg-indigo-100 text-indigo-800",
+  "no-signal": "bg-red-100 text-red-800",
+  error: "bg-red-100 text-red-800",
+  custom: "bg-gray-100 text-gray-800",
 };
 
 const ScreenshotBrowser: React.FC<ScreenshotBrowserProps> = ({
   open,
   onOpenChange,
   onSelectScreenshot,
-  currentDeviceId
+  currentDeviceId,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(
+    null,
+  );
 
-  // Filter screenshots
-  const filteredScreenshots = mockScreenshots.filter(screenshot => {
-    const matchesSearch = screenshot.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDevice = !currentDeviceId || screenshot.deviceId === currentDeviceId;
-    const matchesType = selectedType === 'all' || screenshot.type === selectedType;
-    
+  // Filter screenshots - will work with API data when implemented
+  const filteredScreenshots = mockScreenshots.filter((screenshot) => {
+    const matchesSearch = screenshot.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesDevice =
+      !currentDeviceId || screenshot.deviceId === currentDeviceId;
+    const matchesType =
+      selectedType === "all" || screenshot.type === selectedType;
+
     return matchesSearch && matchesDevice && matchesType;
   });
 
-  const handleSelect = () => {
+  const handleSelectScreenshot = () => {
     if (selectedScreenshot) {
-      const screenshot = mockScreenshots.find(s => s.id === selectedScreenshot);
+      const screenshot = mockScreenshots.find(
+        (s) => s.id === selectedScreenshot,
+      );
       if (screenshot) {
-        onSelectScreenshot(screenshot.url);
+        onSelectScreenshot(screenshot);
         onOpenChange(false);
       }
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <FolderOpen className="h-5 w-5 mr-2" />
-            Выбор скриншота из библиотеки
-          </DialogTitle>
-        </DialogHeader>
+  if (!open) return null;
 
-        <div className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Поиск скриншотов..."
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold">Screenshot Browser</h2>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="p-6 border-b bg-gray-50">
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* Search */}
+            <div className="relative flex-1 min-w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search screenshots..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            
-            <div className="flex gap-2">
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="all">Все типы</option>
-                <option value="home">Главное меню</option>
-                <option value="settings">Настройки</option>
-                <option value="channels">Каналы</option>
-                <option value="apps">Приложения</option>
-                <option value="guide">Гид</option>
-                <option value="no-signal">Нет сигнала</option>
-                <option value="error">Ошибка</option>
-                <option value="custom">Другое</option>
-              </select>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            {/* Type Filter */}
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All Types</option>
+              <option value="home">Home</option>
+              <option value="settings">Settings</option>
+              <option value="channels">Channels</option>
+              <option value="apps">Apps</option>
+              <option value="guide">Guide</option>
+              <option value="no-signal">No Signal</option>
+              <option value="error">Error</option>
+              <option value="custom">Custom</option>
+            </select>
+
+            {/* View Mode */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
               >
-                {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
-              </Button>
+                <Grid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded ${viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
+              >
+                <List className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        </div>
 
-          {/* Screenshots Grid/List */}
-          <div className="max-h-96 overflow-y-auto border rounded-lg p-4">
+        {/* Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Screenshots List */}
+          <div className="flex-1 overflow-auto p-6">
             {filteredScreenshots.length === 0 ? (
-              <div className="text-center py-8">
-                <ImageIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">Скриншоты не найдены</p>
+              <div className="text-center py-12 text-gray-500">
+                <Eye className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">No screenshots found</p>
+                <p className="text-sm">
+                  Screenshots will be loaded from API when implemented
+                </p>
               </div>
             ) : (
-              <div className={cn(
-                viewMode === 'grid' 
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" 
-                  : "space-y-2"
-              )}>
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                    : "space-y-2"
+                }
+              >
                 {filteredScreenshots.map((screenshot) => (
-                  <Card
+                  <div
                     key={screenshot.id}
-                    className={cn(
-                      "cursor-pointer transition-all hover:shadow-md",
-                      selectedScreenshot === screenshot.id && "ring-2 ring-blue-500"
-                    )}
                     onClick={() => setSelectedScreenshot(screenshot.id)}
+                    className={`cursor-pointer border rounded-lg overflow-hidden transition-all ${
+                      selectedScreenshot === screenshot.id
+                        ? "ring-2 ring-blue-500 border-blue-500"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
                   >
-                    <CardContent className={cn(
-                      "p-3",
-                      viewMode === 'list' && "flex items-center space-x-4"
-                    )}>
-                      {viewMode === 'grid' ? (
-                        <div className="space-y-2">
-                          <div className="aspect-video bg-gray-100 rounded overflow-hidden">
-                            <img
-                              src={screenshot.url}
-                              alt={screenshot.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-sm">{screenshot.name}</h4>
-                            <div className="flex items-center justify-between mt-1">
-                              <Badge className={typeColors[screenshot.type as keyof typeof typeColors] || typeColors.custom}>
-                                {screenshot.type}
-                              </Badge>
-                              <span className="text-xs text-gray-500">{screenshot.size}</span>
-                            </div>
+                    {viewMode === "grid" ? (
+                      <div>
+                        <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                          <img
+                            src={screenshot.url}
+                            alt={screenshot.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-3">
+                          <h3 className="font-medium text-sm truncate">
+                            {screenshot.name}
+                          </h3>
+                          <div className="flex items-center justify-between mt-2">
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${typeColors[screenshot.type]}`}
+                            >
+                              {screenshot.type}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {screenshot.size}
+                            </span>
                           </div>
                         </div>
-                      ) : (
-                        <>
-                          <div className="w-16 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                            <img
-                              src={screenshot.url}
-                              alt={screenshot.name}
-                              className="w-full h-full object-cover"
-                            />
+                      </div>
+                    ) : (
+                      <div className="flex items-center p-3">
+                        <div className="w-16 h-12 bg-gray-100 rounded flex-shrink-0 mr-3">
+                          <img
+                            src={screenshot.url}
+                            alt={screenshot.name}
+                            className="w-full h-full object-cover rounded"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">
+                            {screenshot.name}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${typeColors[screenshot.type]}`}
+                            >
+                              {screenshot.type}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {screenshot.size}
+                            </span>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm truncate">{screenshot.name}</h4>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Badge className={typeColors[screenshot.type as keyof typeof typeColors] || typeColors.custom}>
-                                {screenshot.type}
-                              </Badge>
-                              <span className="text-xs text-gray-500">{screenshot.size}</span>
-                            </div>
-                          </div>
-                          {selectedScreenshot === screenshot.id && (
-                            <Check className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                          )}
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <div className="text-sm text-gray-500">
-              {filteredScreenshots.length} скриншот(ов) найдено
-              {currentDeviceId && ` для ${currentDeviceId}`}
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Отмена
-              </Button>
-              <Button
-                onClick={handleSelect}
-                disabled={!selectedScreenshot}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Выбрать
-              </Button>
-            </div>
+        {/* Footer */}
+        <div className="p-6 border-t bg-gray-50 flex justify-between items-center">
+          <p className="text-sm text-gray-600">
+            {filteredScreenshots.length} screenshot
+            {filteredScreenshots.length !== 1 ? "s" : ""} found
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSelectScreenshot}
+              disabled={!selectedScreenshot}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Select Screenshot
+            </button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
