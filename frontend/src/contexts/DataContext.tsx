@@ -45,7 +45,8 @@ class APIService {
       const data = await response.json();
 
       if (!response.ok) {
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         console.warn(`API Warning [${endpoint}]:`, errorMessage);
 
         // Возвращаем стандартный failed response вместо throw
@@ -58,12 +59,16 @@ class APIService {
 
       return data;
     } catch (error) {
-      console.warn(`API Warning [${endpoint}]:`, error instanceof Error ? error.message : 'Unknown error');
+      console.warn(
+        `API Warning [${endpoint}]:`,
+        error instanceof Error ? error.message : "Unknown error",
+      );
 
       // Возвращаем стандартный failed response
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Network or parsing error',
+        error:
+          error instanceof Error ? error.message : "Network or parsing error",
         data: undefined as any,
       };
     }
@@ -380,7 +385,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const [sessions, setSessions] = useState<DiagnosticSession[]>([]);
   const [changeLogs, setChangeLogs] = useState<ChangeLog[]>([]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
+  const [siteSettings, setSiteSettings] =
+    useState<SiteSettings>(defaultSiteSettings);
 
   // Helper functions
   const generateId = () => {
@@ -1255,32 +1261,47 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
     try {
       // Загружаем все доступные эндпоинты
-      const [devicesResult, problemsResult, stepsResult, remotesResult] = await Promise.allSettled([
-        api.getAll<Device>("devices"),
-        api.getAll<Problem>("problems"),
-        api.getAll<Step>("steps"),
-        api.getAll<Remote>("remotes")
-      ]);
+      const [devicesResult, problemsResult, stepsResult, remotesResult] =
+        await Promise.allSettled([
+          api.getAll<Device>("devices"),
+          api.getAll<Problem>("problems"),
+          api.getAll<Step>("steps"),
+          api.getAll<Remote>("remotes"),
+        ]);
 
       if (devicesResult.status === "fulfilled" && devicesResult.value.success) {
         setDevices(devicesResult.value.data || []);
-        console.log("✅ Devices loaded from API:", devicesResult.value.data?.length);
+        console.log(
+          "✅ Devices loaded from API:",
+          devicesResult.value.data?.length,
+        );
       } else {
         console.warn("⚠️ Could not load devices (server error or no database)");
         setDevices([]); // Уст��навливаем пустой массив при ошибке
       }
 
-      if (problemsResult.status === "fulfilled" && problemsResult.value.success) {
+      if (
+        problemsResult.status === "fulfilled" &&
+        problemsResult.value.success
+      ) {
         setProblems(problemsResult.value.data || []);
-        console.log("✅ Problems loaded from API:", problemsResult.value.data?.length);
+        console.log(
+          "✅ Problems loaded from API:",
+          problemsResult.value.data?.length,
+        );
       } else {
-        console.warn("⚠️ Could not load problems (server error or no database)");
+        console.warn(
+          "⚠️ Could not load problems (server error or no database)",
+        );
         setProblems([]);
       }
 
       if (stepsResult.status === "fulfilled" && stepsResult.value.success) {
         setSteps(stepsResult.value.data || []);
-        console.log("✅ Steps loaded from API:", stepsResult.value.data?.length);
+        console.log(
+          "✅ Steps loaded from API:",
+          stepsResult.value.data?.length,
+        );
       } else {
         console.warn("⚠️ Could not load steps (server error or no database)");
         setSteps([]);
@@ -1288,12 +1309,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
       if (remotesResult.status === "fulfilled" && remotesResult.value.success) {
         setRemotes(remotesResult.value.data || []);
-        console.log("✅ Remotes loaded from API:", remotesResult.value.data?.length);
+        console.log(
+          "✅ Remotes loaded from API:",
+          remotesResult.value.data?.length,
+        );
       } else {
         console.warn("⚠️ Could not load remotes (placeholder endpoint)");
         setRemotes([]);
       }
-
     } catch (error) {
       console.error("❌ Error refreshing data:", error);
       // При полной ошибке устанавливаем пустые массивы

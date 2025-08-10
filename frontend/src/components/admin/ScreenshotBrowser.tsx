@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import { X, Search, Grid, List, Download, Eye, Trash2 } from 'lucide-react';
+import React, { useState } from "react";
+import { X, Search, Grid, List, Download, Eye, Trash2 } from "lucide-react";
 
 interface Screenshot {
   id: string;
   deviceId: string;
   name: string;
-  type: 'home' | 'settings' | 'channels' | 'apps' | 'guide' | 'no-signal' | 'error' | 'custom';
+  type:
+    | "home"
+    | "settings"
+    | "channels"
+    | "apps"
+    | "guide"
+    | "no-signal"
+    | "error"
+    | "custom";
   url: string;
   timestamp: string;
   size: string;
@@ -22,39 +30,47 @@ interface ScreenshotBrowserProps {
 const mockScreenshots: Screenshot[] = [];
 
 const typeColors = {
-  home: 'bg-blue-100 text-blue-800',
-  settings: 'bg-purple-100 text-purple-800',
-  channels: 'bg-green-100 text-green-800',
-  apps: 'bg-orange-100 text-orange-800',
-  guide: 'bg-indigo-100 text-indigo-800',
-  'no-signal': 'bg-red-100 text-red-800',
-  error: 'bg-red-100 text-red-800',
-  custom: 'bg-gray-100 text-gray-800'
+  home: "bg-blue-100 text-blue-800",
+  settings: "bg-purple-100 text-purple-800",
+  channels: "bg-green-100 text-green-800",
+  apps: "bg-orange-100 text-orange-800",
+  guide: "bg-indigo-100 text-indigo-800",
+  "no-signal": "bg-red-100 text-red-800",
+  error: "bg-red-100 text-red-800",
+  custom: "bg-gray-100 text-gray-800",
 };
 
 const ScreenshotBrowser: React.FC<ScreenshotBrowserProps> = ({
   open,
   onOpenChange,
   onSelectScreenshot,
-  currentDeviceId
+  currentDeviceId,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(
+    null,
+  );
 
   // Filter screenshots - will work with API data when implemented
-  const filteredScreenshots = mockScreenshots.filter(screenshot => {
-    const matchesSearch = screenshot.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDevice = !currentDeviceId || screenshot.deviceId === currentDeviceId;
-    const matchesType = selectedType === 'all' || screenshot.type === selectedType;
-    
+  const filteredScreenshots = mockScreenshots.filter((screenshot) => {
+    const matchesSearch = screenshot.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesDevice =
+      !currentDeviceId || screenshot.deviceId === currentDeviceId;
+    const matchesType =
+      selectedType === "all" || screenshot.type === selectedType;
+
     return matchesSearch && matchesDevice && matchesType;
   });
 
   const handleSelectScreenshot = () => {
     if (selectedScreenshot) {
-      const screenshot = mockScreenshots.find(s => s.id === selectedScreenshot);
+      const screenshot = mockScreenshots.find(
+        (s) => s.id === selectedScreenshot,
+      );
       if (screenshot) {
         onSelectScreenshot(screenshot);
         onOpenChange(false);
@@ -113,14 +129,14 @@ const ScreenshotBrowser: React.FC<ScreenshotBrowserProps> = ({
             {/* View Mode */}
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
               >
                 <Grid className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded ${viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
               >
                 <List className="w-4 h-4" />
               </button>
@@ -136,55 +152,75 @@ const ScreenshotBrowser: React.FC<ScreenshotBrowserProps> = ({
               <div className="text-center py-12 text-gray-500">
                 <Eye className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium">No screenshots found</p>
-                <p className="text-sm">Screenshots will be loaded from API when implemented</p>
+                <p className="text-sm">
+                  Screenshots will be loaded from API when implemented
+                </p>
               </div>
             ) : (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' : 'space-y-2'}>
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                    : "space-y-2"
+                }
+              >
                 {filteredScreenshots.map((screenshot) => (
                   <div
                     key={screenshot.id}
                     onClick={() => setSelectedScreenshot(screenshot.id)}
                     className={`cursor-pointer border rounded-lg overflow-hidden transition-all ${
-                      selectedScreenshot === screenshot.id 
-                        ? 'ring-2 ring-blue-500 border-blue-500' 
-                        : 'border-gray-200 hover:border-gray-300'
+                      selectedScreenshot === screenshot.id
+                        ? "ring-2 ring-blue-500 border-blue-500"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    {viewMode === 'grid' ? (
+                    {viewMode === "grid" ? (
                       <div>
                         <div className="aspect-video bg-gray-100 flex items-center justify-center">
-                          <img 
-                            src={screenshot.url} 
+                          <img
+                            src={screenshot.url}
                             alt={screenshot.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <div className="p-3">
-                          <h3 className="font-medium text-sm truncate">{screenshot.name}</h3>
+                          <h3 className="font-medium text-sm truncate">
+                            {screenshot.name}
+                          </h3>
                           <div className="flex items-center justify-between mt-2">
-                            <span className={`text-xs px-2 py-1 rounded-full ${typeColors[screenshot.type]}`}>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${typeColors[screenshot.type]}`}
+                            >
                               {screenshot.type}
                             </span>
-                            <span className="text-xs text-gray-500">{screenshot.size}</span>
+                            <span className="text-xs text-gray-500">
+                              {screenshot.size}
+                            </span>
                           </div>
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-center p-3">
                         <div className="w-16 h-12 bg-gray-100 rounded flex-shrink-0 mr-3">
-                          <img 
-                            src={screenshot.url} 
+                          <img
+                            src={screenshot.url}
                             alt={screenshot.name}
                             className="w-full h-full object-cover rounded"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm truncate">{screenshot.name}</h3>
+                          <h3 className="font-medium text-sm truncate">
+                            {screenshot.name}
+                          </h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-xs px-2 py-1 rounded-full ${typeColors[screenshot.type]}`}>
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${typeColors[screenshot.type]}`}
+                            >
                               {screenshot.type}
                             </span>
-                            <span className="text-xs text-gray-500">{screenshot.size}</span>
+                            <span className="text-xs text-gray-500">
+                              {screenshot.size}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -199,9 +235,10 @@ const ScreenshotBrowser: React.FC<ScreenshotBrowserProps> = ({
         {/* Footer */}
         <div className="p-6 border-t bg-gray-50 flex justify-between items-center">
           <p className="text-sm text-gray-600">
-            {filteredScreenshots.length} screenshot{filteredScreenshots.length !== 1 ? 's' : ''} found
+            {filteredScreenshots.length} screenshot
+            {filteredScreenshots.length !== 1 ? "s" : ""} found
           </p>
-          
+
           <div className="flex gap-2">
             <button
               onClick={() => onOpenChange(false)}

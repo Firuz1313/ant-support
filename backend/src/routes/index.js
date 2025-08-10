@@ -25,7 +25,7 @@ router.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.APP_ENV || "local",
-    version: "1.0.0"
+    version: "1.0.0",
   });
 });
 
@@ -54,8 +54,8 @@ router.get("/health/db", async (req, res) => {
         database: {
           connected: true,
           serverTime: dbResult.serverTime,
-          version: dbResult.version
-        }
+          version: dbResult.version,
+        },
       });
     } else {
       res.status(503).json({
@@ -64,8 +64,8 @@ router.get("/health/db", async (req, res) => {
         timestamp: new Date().toISOString(),
         database: {
           connected: false,
-          error: dbResult.error
-        }
+          error: dbResult.error,
+        },
       });
     }
   } catch (error) {
@@ -77,8 +77,8 @@ router.get("/health/db", async (req, res) => {
       timestamp: new Date().toISOString(),
       database: {
         connected: false,
-        error: error.message
-      }
+        error: error.message,
+      },
     });
   }
 });

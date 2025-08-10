@@ -91,11 +91,13 @@ class TVInterface extends BaseModel {
       const result = await this.query(query, params);
 
       // Parse JSON fields for each TV interface
-      const processedRows = result.rows.map(tvInterface => {
+      const processedRows = result.rows.map((tvInterface) => {
         // Parse clickable_areas
         if (tvInterface.clickable_areas) {
           try {
-            tvInterface.clickable_areas = JSON.parse(tvInterface.clickable_areas);
+            tvInterface.clickable_areas = JSON.parse(
+              tvInterface.clickable_areas,
+            );
           } catch (e) {
             tvInterface.clickable_areas = [];
           }
@@ -106,7 +108,9 @@ class TVInterface extends BaseModel {
         // Parse highlight_areas
         if (tvInterface.highlight_areas) {
           try {
-            tvInterface.highlight_areas = JSON.parse(tvInterface.highlight_areas);
+            tvInterface.highlight_areas = JSON.parse(
+              tvInterface.highlight_areas,
+            );
           } catch (e) {
             tvInterface.highlight_areas = [];
           }
@@ -142,11 +146,13 @@ class TVInterface extends BaseModel {
       const result = await this.query(query, [deviceId]);
 
       // Parse JSON fields for each TV interface
-      const processedRows = result.rows.map(tvInterface => {
+      const processedRows = result.rows.map((tvInterface) => {
         // Parse clickable_areas
         if (tvInterface.clickable_areas) {
           try {
-            tvInterface.clickable_areas = JSON.parse(tvInterface.clickable_areas);
+            tvInterface.clickable_areas = JSON.parse(
+              tvInterface.clickable_areas,
+            );
           } catch (e) {
             tvInterface.clickable_areas = [];
           }
@@ -157,7 +163,9 @@ class TVInterface extends BaseModel {
         // Parse highlight_areas
         if (tvInterface.highlight_areas) {
           try {
-            tvInterface.highlight_areas = JSON.parse(tvInterface.highlight_areas);
+            tvInterface.highlight_areas = JSON.parse(
+              tvInterface.highlight_areas,
+            );
           } catch (e) {
             tvInterface.highlight_areas = [];
           }

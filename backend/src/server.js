@@ -14,19 +14,26 @@ dotenv.config();
 // СТРОГАЯ ВАЛИДАЦИЯ .env НА СТАРТЕ - все ключи обязательны
 function validateEnvironment() {
   const required = [
-    'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_SSL'
+    "DB_HOST",
+    "DB_PORT",
+    "DB_NAME",
+    "DB_USER",
+    "DB_PASSWORD",
+    "DB_SSL",
   ];
-  
-  const missing = required.filter(key => !process.env[key]);
-  
+
+  const missing = required.filter((key) => !process.env[key]);
+
   if (missing.length > 0) {
-    console.error('❌ FATAL: Missing required environment variables:');
-    missing.forEach(key => console.error(`   - ${key}`));
-    console.error('❌ Server cannot start without complete PostgreSQL configuration');
+    console.error("❌ FATAL: Missing required environment variables:");
+    missing.forEach((key) => console.error(`   - ${key}`));
+    console.error(
+      "❌ Server cannot start without complete PostgreSQL configuration",
+    );
     process.exit(1);
   }
-  
-  console.log('✅ Environment validation passed');
+
+  console.log("✅ Environment validation passed");
 }
 
 // Валидируем окружение перед любыми другими операциями
@@ -173,7 +180,7 @@ app.get("/health/db", async (req, res) => {
     // Выполняем SELECT 1 для проверки соединения
     const { query } = await import("./utils/database.js");
     await query("SELECT 1 as test");
-    
+
     const latencyMs = Date.now() - startTime;
 
     res.json({
@@ -184,8 +191,8 @@ app.get("/health/db", async (req, res) => {
         connected: true,
         host: process.env.DB_HOST,
         database: process.env.DB_NAME,
-        test: "SELECT 1 successful"
-      }
+        test: "SELECT 1 successful",
+      },
     });
   } catch (error) {
     const latencyMs = Date.now() - startTime;
@@ -199,8 +206,8 @@ app.get("/health/db", async (req, res) => {
         connected: false,
         error: error.message,
         host: process.env.DB_HOST,
-        database: process.env.DB_NAME
-      }
+        database: process.env.DB_NAME,
+      },
     });
   }
 });
@@ -236,10 +243,10 @@ process.on("SIGINT", () => {
 async function startServer() {
   try {
     console.log("🔄 Starting server with FAIL-FAST PostgreSQL validation...");
-    
+
     // Обязательная проверка подключения к БД перед стартом
     await initializeDatabase();
-    
+
     // Запуск сервера только после успешного подключения к БД
     app.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 ANT Support API Server started successfully!");
@@ -261,7 +268,6 @@ async function startServer() {
         );
       }
     });
-    
   } catch (error) {
     console.error("❌ FATAL: Server startup failed due to database error");
     console.error("❌ Error:", error.message);

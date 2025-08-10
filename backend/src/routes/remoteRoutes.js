@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 
 const router = express.Router();
 
@@ -10,12 +10,12 @@ const router = express.Router();
  * @desc Получить все remotes (заглушка)
  * @access Public
  */
-router.get('/', (req, res) => {
+router.get("/", (req, res) => {
   res.json({
     success: true,
     data: [],
-    message: 'Remotes endpoint placeholder - empty array returned',
-    timestamp: new Date().toISOString()
+    message: "Remotes endpoint placeholder - empty array returned",
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -24,12 +24,12 @@ router.get('/', (req, res) => {
  * @desc Получить remote по ID (заглушка)
  * @access Public
  */
-router.get('/:id', (req, res) => {
+router.get("/:id", (req, res) => {
   res.status(404).json({
     success: false,
-    error: 'Remote not found',
-    message: 'Remotes functionality not implemented yet',
-    timestamp: new Date().toISOString()
+    error: "Remote not found",
+    message: "Remotes functionality not implemented yet",
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -38,12 +38,12 @@ router.get('/:id', (req, res) => {
  * @desc Создать remote (заглушка)
  * @access Public
  */
-router.post('/', (req, res) => {
+router.post("/", (req, res) => {
   res.status(501).json({
     success: false,
-    error: 'Not implemented',
-    message: 'Remote creation not implemented yet',
-    timestamp: new Date().toISOString()
+    error: "Not implemented",
+    message: "Remote creation not implemented yet",
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -52,12 +52,12 @@ router.post('/', (req, res) => {
  * @desc Обновить remote (заглушка)
  * @access Public
  */
-router.put('/:id', (req, res) => {
+router.put("/:id", (req, res) => {
   res.status(501).json({
     success: false,
-    error: 'Not implemented',
-    message: 'Remote update not implemented yet',
-    timestamp: new Date().toISOString()
+    error: "Not implemented",
+    message: "Remote update not implemented yet",
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -66,12 +66,12 @@ router.put('/:id', (req, res) => {
  * @desc Удалить remote (заглушка)
  * @access Public
  */
-router.delete('/:id', (req, res) => {
+router.delete("/:id", (req, res) => {
   res.status(501).json({
     success: false,
-    error: 'Not implemented',
-    message: 'Remote deletion not implemented yet',
-    timestamp: new Date().toISOString()
+    error: "Not implemented",
+    message: "Remote deletion not implemented yet",
+    timestamp: new Date().toISOString(),
   });
 });
 

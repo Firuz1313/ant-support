@@ -15,13 +15,20 @@ const { Pool, Client } = pkg;
 
 // Strict .env validation - все ключи обязательны
 function validateRequiredEnvVars() {
-  const required = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_SSL'];
-  const missing = required.filter(key => !process.env[key]);
-  
+  const required = [
+    "DB_HOST",
+    "DB_PORT",
+    "DB_NAME",
+    "DB_USER",
+    "DB_PASSWORD",
+    "DB_SSL",
+  ];
+  const missing = required.filter((key) => !process.env[key]);
+
   if (missing.length > 0) {
-    console.error('❌ FATAL: Missing required environment variables:');
-    missing.forEach(key => console.error(`   - ${key}`));
-    console.error('❌ Server cannot start without PostgreSQL configuration');
+    console.error("❌ FATAL: Missing required environment variables:");
+    missing.forEach((key) => console.error(`   - ${key}`));
+    console.error("❌ Server cannot start without PostgreSQL configuration");
     process.exit(1);
   }
 }
@@ -59,7 +66,9 @@ const pool = new Pool(dbConfig);
 
 // Обработка событий pool
 pool.on("connect", (client) => {
-  console.log(`📊 DB connected: host=${dbConfig.host} db=${dbConfig.database} pool=active`);
+  console.log(
+    `📊 DB connected: host=${dbConfig.host} db=${dbConfig.database} pool=active`,
+  );
 });
 
 pool.on("error", (err, client) => {
@@ -137,7 +146,7 @@ export async function query(text, params = []) {
     console.error(`❌ FATAL SQL Error after ${duration}ms:`, error.message);
     console.error("🔍 Query:", text);
     console.error("🔍 Parameters:", params);
-    
+
     // FAIL-FAST: Никаких fallback, сразу пробрасываем ошибку
     throw error;
   } finally {
@@ -230,13 +239,13 @@ export async function runMigrations() {
 
     // Читаем файлы миграций
     const migrationsDir = path.join(__dirname, "../../migrations");
-    
+
     // Проверяем существование папки миграций
     if (!fs.existsSync(migrationsDir)) {
       console.log("📁 Папка миграций не найдена, создаём пустую");
       return;
     }
-    
+
     const migrationFiles = fs
       .readdirSync(migrationsDir)
       .filter((file) => file.endsWith(".sql"))
