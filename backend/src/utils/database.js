@@ -13,7 +13,7 @@ dotenv.config();
 
 const { Pool, Client } = pkg;
 
-// Конфигурация подключения к PostgreSQL - только real DB
+// Конфигурация подключения к PostgreSQL - ��олько real DB
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT) || 5432,
@@ -126,7 +126,17 @@ export async function query(text, params = []) {
     // Fallback для случая когда PostgreSQL недоступен
     if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
       console.warn("🔧 PostgreSQL unavailable, returning empty result set");
-      return { rows: [], rowCount: 0 };
+
+      // Определяем тип запроса для возврата соответствующего fallback
+      const lowerText = text.toLowerCase().trim();
+
+      if (lowerText.includes('count(') || lowerText.includes('count *')) {
+        // Для COUNT запросов возвращаем 0
+        return { rows: [{ count: 0 }], rowCount: 1 };
+      } else {
+        // Для SELECT запросов возвращаем пустой массив
+        return { rows: [], rowCount: 0 };
+      }
     }
 
     throw error;
@@ -218,7 +228,7 @@ export async function runMigrations() {
       executedResult.rows.map((row) => row.filename),
     );
 
-    // Читаем фай��ы миграций
+    // Читаем файлы миграций
     const migrationsDir = path.join(__dirname, "../../migrations");
     const migrationFiles = fs
       .readdirSync(migrationsDir)
