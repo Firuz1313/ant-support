@@ -1,5 +1,6 @@
 import Device from '../models/Device.js';
 import { deviceValidation, validateRequest } from '../middleware/validateRequest.js';
+import { safeDatabaseCall } from '../middleware/databaseFallback.js';
 
 const deviceModel = new Device();
 
@@ -37,31 +38,20 @@ class DeviceController {
         sortOrder: order.toUpperCase()
       };
 
-      let devices = [];
-      try {
+      // Используем безопасные вызовы к БД
+      const devices = await safeDatabaseCall(async () => {
         if (admin === 'true') {
-          // Для админ панели - расширенная информация
-          devices = await deviceModel.getForAdmin(filters, options);
+          return await deviceModel.getForAdmin(filters, options);
         } else if (include_stats === 'true') {
-          // С статистикой
-          devices = await deviceModel.findAllWithStats(filters, options);
+          return await deviceModel.findAllWithStats(filters, options);
         } else {
-          // Обычный список
-          devices = await deviceModel.findAll(filters, options);
+          return await deviceModel.findAll(filters, options);
         }
-      } catch (error) {
-        console.warn("Could not get devices, using empty array:", error.message);
-        devices = [];
-      }
+      }, []);
 
-      // Подсчет общего количества для пагинации (с fallback)
-      let total = 0;
-      try {
-        total = await deviceModel.count(filters);
-      } catch (error) {
-        console.warn("Could not get device count, using fallback:", error.message);
-        total = 0;
-      }
+      const total = await safeDatabaseCall(async () => {
+        return await deviceModel.count(filters);
+      }, 0);
       const totalPages = Math.ceil(total / options.limit);
 
       res.json({
@@ -101,7 +91,7 @@ class DeviceController {
       if (!device) {
         return res.status(404).json({
           success: false,
-          error: 'Устройство н�� найдено',
+          error: 'Устройство не найдено',
           errorType: 'NOT_FOUND',
           timestamp: new Date().toISOString()
         });
@@ -241,7 +231,7 @@ class DeviceController {
         // Жесткое удаление (осторожно!)
         deletedDevice = await deviceModel.delete(id);
       } else {
-        // Мягкое удаление
+        // Мягкое уда��ение
         deletedDevice = await deviceModel.softDelete(id);
       }
 
@@ -477,7 +467,7 @@ const deviceController = new DeviceController();
 const validateDeviceCreation = validateRequest(deviceValidation.create);
 const validateDeviceUpdate = validateRequest(deviceValidation.update);
 
-// Экспортируем методы с примененной валидацией
+// Экспортируем методы с примен��нной валидацией
 export const getDevices = deviceController.getDevices.bind(deviceController);
 export const getDeviceById = deviceController.getDeviceById.bind(deviceController);
 export const createDevice = [validateDeviceCreation, deviceController.createDevice.bind(deviceController)];
