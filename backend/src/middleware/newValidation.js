@@ -47,6 +47,20 @@ export const stepCreationValidation = Joi.object({
   metadata: Joi.object().unknown(true).optional()
 });
 
+// Валидация для создания устройств БЕЗ ID (SERIAL)
+export const deviceCreationValidation = Joi.object({
+  name: Joi.string().min(1).max(255).required(),
+  brand: Joi.string().min(1).max(255).required(),
+  model: Joi.string().min(1).max(255).required(),
+  description: commonSchemas.text,
+  image_url: Joi.string().uri().max(500),
+  logo_url: Joi.string().uri().max(500),
+  color: commonSchemas.color.default('from-gray-500 to-gray-600'),
+  order_index: commonSchemas.integer.default(0),
+  status: Joi.string().valid('active', 'inactive', 'maintenance').default('active'),
+  metadata: Joi.object().unknown(true).optional()
+});
+
 // Middleware для валидации
 export const validateRequest = (schema, source = 'body') => {
   return (req, res, next) => {
