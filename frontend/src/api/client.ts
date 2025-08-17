@@ -146,9 +146,16 @@ export class ApiClient {
         // Special handling for different error types
         if (response.status === 409) {
           console.error(`📡 Conflict Error 409: ${errorMessage}`);
-          console.error(`📡 Response data:`, responseData);
-        } else {
+          console.error(`📡 Conflict Response:`, JSON.stringify(responseData, null, 2));
+          console.error(`📡 Error Type:`, responseData?.errorType);
+          console.error(`📡 Suggestion:`, responseData?.suggestion);
+        } else if (response.status >= 400) {
           console.error(`📡 HTTP Error ${response.status}: ${errorMessage}`);
+          console.error(`📡 Error Response:`, JSON.stringify(responseData, null, 2));
+          console.error(`📡 Error Type:`, responseData?.errorType);
+          if (responseData?.details) {
+            console.error(`📡 Error Details:`, responseData.details);
+          }
         }
 
         throw new ApiError(
