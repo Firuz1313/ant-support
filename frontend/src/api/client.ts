@@ -261,9 +261,14 @@ export class ApiClient {
         // Handle specific body stream errors
         if (
           error.message.includes("body stream") ||
-          error.message.includes("already read")
+          error.message.includes("already read") ||
+          error.message.includes("body used")
         ) {
-          throw new ApiError("Response reading error - please try again", 0);
+          console.error("📡 Body stream error detected:", error.message);
+          throw new ApiError("Response reading error - the response body was already consumed. Please try again.", 0, {
+            originalError: error.message,
+            errorType: 'BODY_STREAM_ERROR'
+          });
         }
 
         throw new ApiError(error.message, 0);
