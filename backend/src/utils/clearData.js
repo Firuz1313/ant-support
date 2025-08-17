@@ -20,15 +20,24 @@ async function clearAllData() {
     
     // Clear data from all tables in correct order (respecting foreign keys)
     console.log('🗑️ Clearing all data from tables...');
-    
+
+    // First disable foreign key checks temporarily
+    await query('SET session_replication_role = replica;');
+
     // Clear in order of dependencies (child tables first)
     const clearQueries = [
-      'DELETE FROM diagnostic_sessions;',
-      'DELETE FROM diagnostic_steps;', 
-      'DELETE FROM problems;',
-      'DELETE FROM tv_interface_marks;',
-      'DELETE FROM tv_interfaces;',
-      'DELETE FROM devices;'
+      'TRUNCATE TABLE diagnostic_sessions RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE diagnostic_steps RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE problems RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE tv_interface_marks RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE tv_interfaces RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE devices RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE remotes RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE users RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE session_steps RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE step_actions RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE site_settings RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE change_logs RESTART IDENTITY CASCADE;'
     ];
     
     for (const clearQuery of clearQueries) {
