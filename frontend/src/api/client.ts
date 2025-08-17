@@ -127,6 +127,7 @@ export class ApiClient {
       // Robust response reading with proper error handling
       let responseData: any = null;
       let responseText = "";
+      let bodyConsumed = false;
 
       // Safely read response body with proper checks
       try {
@@ -134,30 +135,39 @@ export class ApiClient {
         const contentLength = response.headers.get('content-length');
 
         console.log(`📡 Response headers - Content-Type: ${contentType}, Content-Length: ${contentLength}`);
+        console.log(`📡 Response body used: ${response.bodyUsed}`);
 
-        // Always try to read the response body once, regardless of headers
-        // Some servers don't set proper content-length headers
-        responseText = await response.text();
-        console.log(
-          `📡 Response text (${responseText.length} chars): ${responseText.substring(0, 100)}`,
-        );
+        // Check if body was already consumed
+        if (response.bodyUsed) {
+          console.warn(`📡 Response body already consumed`);
+          responseText = "";
+          bodyConsumed = true;
+        } else {
+          // Try to read the response body once
+          responseText = await response.text();
+          bodyConsumed = true;
+          console.log(
+            `📡 Response text (${responseText.length} chars): ${responseText.substring(0, 200)}`,
+          );
+        }
       } catch (textError) {
         console.error(`📡 Failed to read response text:`, textError);
         // If reading fails, it's likely already consumed or there's a network issue
         responseText = "";
+        bodyConsumed = true;
       }
 
       // Try to parse JSON if we have text
       if (responseText.trim()) {
         try {
           responseData = JSON.parse(responseText);
-          console.log(`📡 Successfully parsed JSON`);
+          console.log(`📡 Successfully parsed JSON:`, responseData);
         } catch (parseError) {
           console.log(`📡 Not JSON, using as text`);
           responseData = { message: responseText };
         }
       } else {
-        console.log(`📡 Empty response`);
+        console.log(`📡 Empty response body`);
         responseData = {};
       }
 
@@ -166,11 +176,31 @@ export class ApiClient {
         // Handle empty or malformed responses
         if (!responseData || Object.keys(responseData).length === 0) {
           console.warn(`📡 Empty error response for ${response.status}`);
+
+          // Try to create meaningful error based on status code
+          let defaultError = `HTTP ${response.status}`;
+          let defaultMessage = `Server returned ${response.status} without error details`;
+
+          if (response.status === 409) {
+            defaultError = "Conflict: Data already exists or violates constraints";
+            defaultMessage = "The requested operation conflicts with existing data";
+          } else if (response.status === 400) {
+            defaultError = "Bad Request: Invalid data provided";
+            defaultMessage = "The request contains invalid or missing data";
+          } else if (response.status === 404) {
+            defaultError = "Not Found: Resource does not exist";
+            defaultMessage = "The requested resource was not found";
+          } else if (response.status === 500) {
+            defaultError = "Internal Server Error";
+            defaultMessage = "An error occurred on the server";
+          }
+
           responseData = {
-            error: `HTTP ${response.status}`,
+            error: defaultError,
             errorType: 'EMPTY_RESPONSE',
-            message: `Server returned ${response.status} without error details`,
-            suggestion: 'Check server logs for more information'
+            message: defaultMessage,
+            suggestion: 'Check server logs for more information',
+            status: response.status
           };
         }
 
@@ -183,17 +213,22 @@ export class ApiClient {
         if (response.status === 409) {
           console.error(`📡 Conflict Error 409: ${errorMessage}`);
           console.error(`📡 Full Conflict Response:`, JSON.stringify(responseData, null, 2));
-          console.error(`📡 Error Type:`, responseData?.errorType || 'UNKNOWN_CONFLICT');
+          console.error(`📡 Error Type:`, responseData?.errorType || 'CONFLICT');
           console.error(`📡 Suggestion:`, responseData?.suggestion || 'Check for duplicate data or constraint violations');
 
           // Add context-specific conflict handling
           if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
             responseData.suggestion = 'Try using a different name or check for existing records';
           }
+
+          // Ensure error type is set for 409
+          if (!responseData.errorType) {
+            responseData.errorType = 'CONFLICT';
+          }
         } else if (response.status >= 400) {
           console.error(`📡 HTTP Error ${response.status}: ${errorMessage}`);
           console.error(`📡 Full Error Response:`, JSON.stringify(responseData, null, 2));
-          console.error(`📡 Error Type:`, responseData?.errorType || 'UNKNOWN_ERROR');
+          console.error(`📡 Error Type:`, responseData?.errorType || 'HTTP_ERROR');
           if (responseData?.details) {
             console.error(`📡 Error Details:`, responseData.details);
           }
@@ -203,7 +238,7 @@ export class ApiClient {
           `HTTP ${response.status}: ${errorMessage}`,
           response.status,
           responseData,
-          responseData?.errorType || 'UNKNOWN_ERROR',
+          responseData?.errorType || 'HTTP_ERROR',
         );
       }
 
