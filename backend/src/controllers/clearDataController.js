@@ -4,35 +4,31 @@ export const clearAllData = async (req, res) => {
   try {
     console.log('🧹 Starting data clearing process...');
     
-    // SQLite doesn't support replication role, skip this
-    
-    // Clear in order of dependencies (using DELETE for SQLite compatibility)
+    // Temporarily disable foreign key checks
+    await query('SET session_replication_role = replica;');
+
+    // Clear in order of dependencies (using TRUNCATE for speed)
     const clearQueries = [
-      'DELETE FROM diagnostic_sessions;',
-      'DELETE FROM diagnostic_steps;',
-      'DELETE FROM problems;',
-      'DELETE FROM tv_interface_marks;',
-      'DELETE FROM tv_interfaces;',
-      'DELETE FROM devices;',
-      'DELETE FROM remotes;',
-      'DELETE FROM users;',
-      'DELETE FROM session_steps;',
-      'DELETE FROM step_actions;',
-      'DELETE FROM site_settings;',
-      'DELETE FROM change_logs;'
+      'TRUNCATE TABLE diagnostic_sessions RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE diagnostic_steps RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE problems RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE tv_interface_marks RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE tv_interfaces RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE devices RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE remotes RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE users RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE session_steps RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE step_actions RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE site_settings RESTART IDENTITY CASCADE;',
+      'TRUNCATE TABLE change_logs RESTART IDENTITY CASCADE;'
     ];
-    
+
     const results = [];
     for (const clearQuery of clearQueries) {
       try {
         console.log(`   Executing: ${clearQuery}`);
-        await new Promise((resolve, reject) => {
-          database.run(clearQuery, (err) => {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-        const tableName = clearQuery.match(/DELETE FROM (\w+)/)[1];
+        await query(clearQuery);
+        const tableName = clearQuery.match(/TRUNCATE TABLE (\w+)/)[1];
         results.push(`${tableName}: cleared`);
         console.log(`   ✅ Table ${tableName} cleared`);
       } catch (error) {
@@ -40,20 +36,18 @@ export const clearAllData = async (req, res) => {
         results.push(`Table may not exist: ${error.message}`);
       }
     }
-    
+
+    // Re-enable foreign key checks
+    await query('SET session_replication_role = DEFAULT;');
+
     // Verify tables are empty
     const tablesToCheck = ['devices', 'problems', 'diagnostic_steps', 'diagnostic_sessions', 'tv_interfaces', 'tv_interface_marks'];
     const rowCounts = {};
 
     for (const tableName of tablesToCheck) {
       try {
-        const result = await new Promise((resolve, reject) => {
-          database.get(`SELECT COUNT(*) as count FROM ${tableName}`, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-          });
-        });
-        rowCounts[tableName] = parseInt(result.count);
+        const result = await query(`SELECT COUNT(*) as count FROM ${tableName}`);
+        rowCounts[tableName] = parseInt(result.rows[0].count);
       } catch (error) {
         rowCounts[tableName] = 'N/A';
       }
