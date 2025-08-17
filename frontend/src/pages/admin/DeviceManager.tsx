@@ -145,7 +145,7 @@ const DeviceManager = () => {
 
   const handleCreate = async () => {
     try {
-      await createDevice({
+      await createDeviceMutation.mutateAsync({
         ...formData,
         isActive: true,
       });
@@ -160,7 +160,10 @@ const DeviceManager = () => {
     if (!selectedDevice) return;
 
     try {
-      await updateDevice(selectedDevice.id, formData);
+      await updateDeviceMutation.mutateAsync({
+        id: selectedDevice.id,
+        data: formData
+      });
       setIsEditDialogOpen(false);
       setSelectedDevice(null);
       resetForm();
