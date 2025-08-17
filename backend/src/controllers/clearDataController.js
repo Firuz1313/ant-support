@@ -26,8 +26,13 @@ export const clearAllData = async (req, res) => {
     for (const clearQuery of clearQueries) {
       try {
         console.log(`   Executing: ${clearQuery}`);
-        await query(clearQuery);
-        const tableName = clearQuery.match(/TRUNCATE TABLE (\w+)/)[1];
+        await new Promise((resolve, reject) => {
+          database.run(clearQuery, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+        const tableName = clearQuery.match(/DELETE FROM (\w+)/)[1];
         results.push(`${tableName}: cleared`);
         console.log(`   ✅ Table ${tableName} cleared`);
       } catch (error) {
