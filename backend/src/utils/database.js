@@ -72,10 +72,6 @@ console.log("🔗 Using PostgreSQL database");
 
 // Функция проверки подключения к базе данных
 export async function testConnection() {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.testConnection();
-  }
-
   let client;
   try {
     client = await pool.connect();
@@ -83,7 +79,7 @@ export async function testConnection() {
       "SELECT NOW() as current_time, version() as postgres_version",
     );
 
-    console.log("✅ Подключение к PostgreSQL ус��ешно");
+    console.log("✅ Подключение к PostgreSQL успешно");
     console.log(`🕐 Время сервера: ${result.rows[0].current_time}`);
     console.log(
       `📋 Версия PostgreSQL: ${result.rows[0].postgres_version.split(" ")[0]}`,
@@ -96,15 +92,6 @@ export async function testConnection() {
     };
   } catch (error) {
     console.error("❌ Ошибка подключения к PostgreSQL:", error.message);
-
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      mockDb = await import("./mockDatabase.js");
-      return await mockDb.testConnection();
-    }
-
     return {
       success: false,
       error: error.message,
@@ -333,7 +320,7 @@ export async function getDatabaseStats() {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("❌ Ошибка получения статистики БД:", error.message);
+    console.error("��� Ошибка получения статистики БД:", error.message);
     throw error;
   }
 }
