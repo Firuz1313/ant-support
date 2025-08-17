@@ -181,11 +181,11 @@ const DeviceManager = () => {
     if (changedData.name) {
       const duplicateDevice = devices.find(d =>
         d.name.toLowerCase() === changedData.name.toLowerCase() &&
-        d.id !== selectedDevice.id
+        String(d.id) !== String(selectedDevice.id)
       );
 
       if (duplicateDevice) {
-        alert(`Конфликт: Устройство с названием "${changedData.name}" уже существует.\n\nПопробу��те использовать другое название.`);
+        alert(`Конфликт: Устройство с названием "${changedData.name}" уже с��ществует.\n\nПопробу��те использовать другое название.`);
         return;
       }
     }
@@ -245,7 +245,7 @@ const DeviceManager = () => {
       await deleteDeviceMutation.mutateAsync({ id: deviceId });
     } catch (error) {
       console.error("Error deleting device:", error);
-      alert("Ошибка при удалении приставки");
+      alert("Ошибка при удален��и приставки");
     }
   };
 
