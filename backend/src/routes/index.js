@@ -6,9 +6,6 @@ import sessionRoutes from "./sessionRoutes.js";
 import tvInterfaceRoutes from "./tvInterfaceRoutes.js";
 import tvInterfaceMarkRoutes from "./tvInterfaceMarkRoutes.js";
 import cleanupRoutes from "./cleanupRoutes.js";
-import seedRoutes from "./seedRoutes.js";
-import testDataRoutes from "./testDataRoutes.js";
-import testRoutes from "./testRoutes.js";
 
 const router = express.Router();
 
@@ -162,7 +159,7 @@ router.get("/docs", (req, res) => {
             "GET /tv-interfaces/:id": "Получение интерфейса ТВ по ID",
             "POST /tv-interfaces": "Создание нового интерфейса ТВ",
             "PUT /tv-interfaces/:id": "Обновление интерфейса ТВ",
-            "DELETE /tv-interfaces/:id": "Удаление интерфейса ТВ",
+            "DELETE /tv-interfaces/:id": "Удаление инте��фейса ТВ",
             "POST /tv-interfaces/:id/duplicate": "Дублирование интерфейса ТВ",
             "PATCH /tv-interfaces/:id/toggle":
               "Активация/деактивация интерфейса ТВ",
