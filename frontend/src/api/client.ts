@@ -113,13 +113,21 @@ export class ApiClient {
       let responseText = "";
 
       try {
-        responseText = await response.text();
+        // Clone the response first to avoid body stream conflicts
+        const responseClone = response.clone();
+        responseText = await responseClone.text();
         console.log(
           `📡 Response text (first 100 chars): ${responseText.substring(0, 100)}`,
         );
       } catch (textError) {
         console.error(`📡 Failed to read response text:`, textError);
-        responseText = "";
+        try {
+          // Fallback: try reading from original response if clone fails
+          responseText = await response.text();
+        } catch (fallbackError) {
+          console.error(`📡 Fallback read also failed:`, fallbackError);
+          responseText = "";
+        }
       }
 
       // Try to parse JSON if we have text
