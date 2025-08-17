@@ -78,19 +78,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     createDevice: async () => ({}),
     updateDevice: async () => ({}),
     deleteDevice: async () => {},
-    
+
     problems: [],
     getProblemsForDevice: () => [],
     createProblem: async () => ({}),
     updateProblem: async () => ({}),
     deleteProblem: async () => {},
-    
+
     steps: [],
     getStepsForProblem: () => [],
     createStep: async () => ({}),
     updateStep: async () => ({}),
     deleteStep: async () => {},
-    
+
     remotes: [],
     getRemoteById: () => null,
     getDefaultRemote: () => null,
@@ -101,10 +101,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     createRemote: async () => ({}),
     updateRemote: async () => ({}),
     deleteRemote: async () => {},
-    
+
+    sessions: [],
+    getActiveSessions: () => [],
+    createSession: async () => ({}),
+    updateSession: async () => ({}),
+
+    changeLogs: [],
+
     getEntityStats: () => ({ total: 0, active: 0, inactive: 0 }),
-    
-    siteSettings: {},
+
+    refreshData: async () => {},
+    exportData: async () => ({ downloadUrl: '' }),
+
+    siteSettings: {
+      siteName: 'ANT Support',
+      siteDescription: 'TV Diagnostics Platform',
+      theme: 'professional'
+    },
     updateSiteSettings: async () => ({}),
   };
 
