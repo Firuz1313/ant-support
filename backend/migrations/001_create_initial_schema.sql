@@ -58,29 +58,7 @@ CREATE TABLE IF NOT EXISTS problems (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Diagnostic steps table
-CREATE TABLE IF NOT EXISTS diagnostic_steps (
-    id VARCHAR(255) PRIMARY KEY,
-    problem_id INTEGER REFERENCES problems(id) ON DELETE CASCADE,
-    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE CASCADE,
-    step_number INTEGER NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    instruction TEXT NOT NULL,
-    expected_result TEXT,
-    estimated_time INTEGER DEFAULT 30, -- in seconds
-    step_type VARCHAR(50) DEFAULT 'action' CHECK (step_type IN ('action', 'check', 'info', 'warning')),
-    remote_id VARCHAR(255), -- References to remote controls
-    tv_interface_id VARCHAR(255), -- References to TV interfaces
-    media_url TEXT, -- images, videos for this step
-    is_optional BOOLEAN DEFAULT false,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(problem_id, step_number)
-);
-
--- Remote controls table
+-- Remote controls table (create before diagnostic_steps for FK reference)
 CREATE TABLE IF NOT EXISTS remotes (
     id VARCHAR(255) PRIMARY KEY,
     device_id VARCHAR(255) REFERENCES devices(id) ON DELETE SET NULL,
@@ -98,6 +76,45 @@ CREATE TABLE IF NOT EXISTS remotes (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- TV interfaces table - screenshots and interface layouts (create before diagnostic_steps)
+CREATE TABLE IF NOT EXISTS tv_interfaces (
+    id VARCHAR(255) PRIMARY KEY,
+    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    type VARCHAR(100) DEFAULT 'home' CHECK (type IN ('home', 'settings', 'guide', 'custom')),
+    screenshot_url TEXT,
+    screenshot_data TEXT, -- Base64 encoded image data
+    clickable_areas JSONB DEFAULT '[]', -- Array of clickable areas
+    highlight_areas JSONB DEFAULT '[]', -- Array of highlight areas
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Diagnostic steps table
+CREATE TABLE IF NOT EXISTS diagnostic_steps (
+    id VARCHAR(255) PRIMARY KEY,
+    problem_id INTEGER REFERENCES problems(id) ON DELETE CASCADE,
+    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE CASCADE,
+    step_number INTEGER NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    instruction TEXT NOT NULL,
+    expected_result TEXT,
+    estimated_time INTEGER DEFAULT 30, -- in seconds
+    step_type VARCHAR(50) DEFAULT 'action' CHECK (step_type IN ('action', 'check', 'info', 'warning')),
+    remote_id VARCHAR(255) REFERENCES remotes(id) ON DELETE SET NULL,
+    tv_interface_id VARCHAR(255) REFERENCES tv_interfaces(id) ON DELETE SET NULL,
+    media_url TEXT, -- images, videos for this step
+    is_optional BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(problem_id, step_number)
 );
 
 -- TV interfaces table - screenshots and interface layouts
