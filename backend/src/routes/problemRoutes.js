@@ -124,7 +124,7 @@ router.get("/:id", getProblemById);
  * @body {string} [problem.status] - Статус проблемы
  * @body {object} [problem.metadata] - Дополнительные данные
  */
-router.post("/", createProblem);
+router.post("/", createProblemNew);
 
 /**
  * @route POST /api/v1/problems/new
@@ -171,7 +171,7 @@ router.post("/:id/update-stats", updateProblemStats);
  * @route POST /api/v1/problems/:id/restore
  * @desc Восстановление архивированной проблемы
  * @access Admin
- * @params {string} id - ID проблемы
+ * @params {string} id - ID проблем��
  */
 router.post("/:id/restore", restoreProblem);
 
