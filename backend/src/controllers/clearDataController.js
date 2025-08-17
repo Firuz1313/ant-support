@@ -1,4 +1,4 @@
-import { query } from '../utils/database.js';
+import { database } from '../utils/database.js';
 
 export const clearAllData = async (req, res) => {
   try {
