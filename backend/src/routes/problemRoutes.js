@@ -3,6 +3,7 @@ import {
   getProblems,
   getProblemById,
   createProblem,
+  createProblemNew,
   updateProblem,
   deleteProblem,
   restoreProblem,
