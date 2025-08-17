@@ -395,7 +395,7 @@ const DeviceManager = () => {
       {/* Devices Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredDevices.map((device) => {
-          const problemsCount = getProblemsForDevice(device.id).length;
+          const problemsCount = device.problems_count || device.published_problems_count || 0;
 
           return (
             <Card
@@ -446,7 +446,7 @@ const DeviceManager = () => {
                       size="sm"
                       onClick={() => handleToggleStatus(device.id)}
                       title={
-                        device.isActive ? "Деактивировать" : "Активировать"
+                        device.isActive ? "Д��активировать" : "Активировать"
                       }
                     >
                       {device.isActive ? (
