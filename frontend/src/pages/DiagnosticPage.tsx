@@ -23,34 +23,24 @@ const DiagnosticPage = () => {
     deviceId: string;
     problemId: string;
   }>();
-  const {
-    getDeviceById,
-    getStepsForProblem,
-    getRemoteById,
-    getDefaultRemoteForDevice,
-    problems,
-  } = useData();
+
+  const { data: deviceData } = useDevice(deviceId || '');
+  const { data: problemData } = useProblem(problemId || '', true);
+
   const [currentStepNumber, setCurrentStepNumber] = useState(1);
   const [manualProgress, setManualProgress] = useState(false);
 
-  const device = deviceId ? getDeviceById(deviceId) : null;
-  const steps = problemId ? getStepsForProblem(problemId) : [];
+  const device = deviceData?.data;
+  const problem = problemData?.data;
+  const steps = problem?.steps || [];
   const currentStepData = steps.find(
-    (step) => step.stepNumber === currentStepNumber,
+    (step: any) => step.stepNumber === currentStepNumber,
   );
   const progress =
     steps.length > 0 ? (currentStepNumber / steps.length) * 100 : 0;
 
-  // Get the remote for this step, or fallback to device default remote
-  const stepRemote = currentStepData?.remoteId
-    ? getRemoteById(currentStepData.remoteId)
-    : null;
-  const deviceDefaultRemote = deviceId
-    ? getDefaultRemoteForDevice(deviceId)
-    : null;
-  const remote = stepRemote || deviceDefaultRemote;
-
-  const problem = problemId ? problems.find((p) => p.id === problemId) : null;
+  // For now, we'll use default remote logic - this could be enhanced later
+  const remote = null; // TODO: Implement remote selection based on step or device
 
   useEffect(() => {
     if (!deviceId || !problemId || steps.length === 0) {
