@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import TVDisplay from "@/components/TVDisplay";
 import TVInterfaceDisplay from "@/components/TVInterfaceDisplay";
 import RemoteControl from "@/components/RemoteControl";
-import { useData } from "@/contexts/DataContext";
+import { useDevice } from "@/hooks/useDevices";
+import { useProblem } from "@/hooks/useProblems";
 import {
   ArrowLeft,
   ArrowRight,
