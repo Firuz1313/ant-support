@@ -32,6 +32,7 @@ interface DataContextType {
   getDefaultRemote: () => any;
   getDefaultRemoteForDevice: (deviceId: string) => any;
   getRemotesForDevice: (deviceId: string) => any[];
+  getActiveRemotes: () => any[];
   canDeleteRemote: (id: string) => { canDelete: boolean; reason?: string };
   getRemoteUsageCount: (id: string) => number;
   createRemote: (data: any) => Promise<any>;
