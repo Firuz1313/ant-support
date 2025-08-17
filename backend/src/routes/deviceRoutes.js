@@ -3,7 +3,7 @@ import {
   getDevices,
   getDeviceById,
   createDevice,
-  createDeviceNew,
+  createDeviceNewWithValidation,
   updateDevice,
   deleteDevice,
   restoreDevice,
@@ -117,7 +117,7 @@ router.put("/bulk", bulkUpdateDevices);
  * @desc Обновление устройства
  * @access Admin
  * @params {string} id - ID устройства
- * @body {object} device - Данные для ��бновления
+ * @body {object} device - Данные для обновления
  */
 router.put("/:id", updateDevice);
 
