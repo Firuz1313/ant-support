@@ -113,7 +113,13 @@ class ProblemController {
    */
   async createProblem(req, res, next) {
     try {
-      const problemData = req.body;
+      let problemData = req.body;
+
+      // If no ID provided, add a temporary one for validation, but remove it before DB insertion
+      const tempId = !problemData.id ? `temp_${Date.now()}` : null;
+      if (tempId) {
+        problemData = { ...problemData, id: tempId };
+      }
 
       // Проверяем существование устройства
       if (problemData.device_id) {
@@ -565,7 +571,7 @@ class ProblemController {
       if (!session_result || !['success', 'failure'].includes(session_result)) {
         return res.status(400).json({
           success: false,
-          error: 'Результат сессии должен быть success или failure',
+          error: 'Результат сессии должен быть success ил�� failure',
           errorType: 'VALIDATION_ERROR',
           timestamp: new Date().toISOString()
         });
@@ -609,7 +615,7 @@ class ProblemController {
 
       if (include_steps === 'true') {
         // Здесь можно добавить логику включения шагов диагностики
-        // Для этого понадобится импорт DiagnosticStep модели
+        // Для этого ��онадобится импорт DiagnosticStep модели
       }
 
       if (format === 'json') {
