@@ -18,7 +18,8 @@ import {
   ChevronRight,
   Tv,
 } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
+import { useDevice } from "@/hooks/useDevices";
+import { useProblemsByDevice } from "@/hooks/useProblems";
 
 const iconMap = {
   Signal,
