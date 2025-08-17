@@ -11,7 +11,7 @@ const deviceModel = new Device();
 export const testCreateProblem = async (req, res) => {
   try {
     console.log('🧪 Test problem creation without validation');
-    console.log('📤 Request body:', JSON.stringify(req.body, null, 2));
+    console.log('��� Request body:', JSON.stringify(req.body, null, 2));
     
     const problemData = req.body;
 
@@ -74,7 +74,32 @@ export const populateData = async (req, res) => {
   }
 };
 
+/**
+ * Выполнить миграции
+ */
+export const runMigrations = async (req, res) => {
+  try {
+    console.log('🔄 Running migrations...');
+
+    const { runMigrations } = await import('../utils/database.js');
+    await runMigrations();
+
+    res.json({
+      success: true,
+      message: 'Migrations completed successfully'
+    });
+  } catch (error) {
+    console.error('❌ Migration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to run migrations',
+      error: error.message
+    });
+  }
+};
+
 export default {
   testCreateProblem,
-  populateData
+  populateData,
+  runMigrations
 };
