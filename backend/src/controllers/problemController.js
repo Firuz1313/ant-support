@@ -91,7 +91,7 @@ class ProblemController {
       if (!problem) {
         return res.status(404).json({
           success: false,
-          error: 'Проблема не на��дена',
+          error: 'Проблема не найдена',
           errorType: 'NOT_FOUND',
           timestamp: new Date().toISOString()
         });
@@ -113,13 +113,7 @@ class ProblemController {
    */
   async createProblem(req, res, next) {
     try {
-      let problemData = req.body;
-
-      // If no ID provided, add a temporary one for validation, but remove it before DB insertion
-      const tempId = !problemData.id ? `temp_${Date.now()}` : null;
-      if (tempId) {
-        problemData = { ...problemData, id: tempId };
-      }
+      const problemData = req.body;
 
       // Проверяем существование устройства
       if (problemData.device_id) {
@@ -150,12 +144,6 @@ class ProblemController {
             timestamp: new Date().toISOString()
           });
         }
-      }
-
-      // Remove temporary ID before database insertion
-      if (tempId && problemData.id === tempId) {
-        const { id, ...dataWithoutId } = problemData;
-        problemData = dataWithoutId;
       }
 
       const newProblem = await problemModel.create(problemData);
@@ -191,7 +179,7 @@ class ProblemController {
         });
       }
 
-      // Проверяем существование устройства при изменении
+      // Проверяем существование устройств�� при изменении
       if (updateData.device_id && updateData.device_id !== existingProblem.device_id) {
         const device = await deviceModel.findById(updateData.device_id);
         if (!device || !device.is_active) {
@@ -481,7 +469,7 @@ class ProblemController {
       res.status(201).json({
         success: true,
         data: duplicatedProblem,
-        message: 'Проблема успешно продублирова��а',
+        message: 'Проблема успешно продублирована',
         timestamp: new Date().toISOString()
       });
     } catch (error) {
