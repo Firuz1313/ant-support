@@ -4,8 +4,7 @@ export const clearAllData = async (req, res) => {
   try {
     console.log('🧹 Starting data clearing process...');
     
-    // Temporarily disable foreign key checks
-    await query('SET session_replication_role = replica;');
+    // SQLite doesn't support replication role, skip this
     
     // Clear in order of dependencies (using TRUNCATE for speed)
     const clearQueries = [
