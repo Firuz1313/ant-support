@@ -91,8 +91,19 @@ export class ApiClient {
     };
 
     console.log(`📤 Request headers:`, headers);
-    console.log(`📤 Request body:`, fetchOptions.body ? "Has body" : "No body");
     console.log(`📤 Request method:`, fetchOptions.method || "GET");
+
+    // Log request body content for debugging
+    if (fetchOptions.body) {
+      try {
+        const bodyData = JSON.parse(fetchOptions.body as string);
+        console.log(`📤 Request body:`, JSON.stringify(bodyData, null, 2));
+      } catch {
+        console.log(`📤 Request body (non-JSON):`, fetchOptions.body);
+      }
+    } else {
+      console.log(`📤 Request body: No body`);
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
