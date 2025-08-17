@@ -181,7 +181,7 @@ class ProblemController {
         });
       }
 
-      // Проверяем существование устройств�� при изменении
+      // Проверяем существо��ание устройств�� при изменении
       if (updateData.device_id && updateData.device_id !== existingProblem.device_id) {
         const device = await deviceModel.findById(updateData.device_id);
         if (!device || !device.is_active) {
@@ -491,7 +491,7 @@ class ProblemController {
       if (!publishedProblem) {
         return res.status(404).json({
           success: false,
-          error: 'Проблема не найдена',
+          error: '��роблема не найдена',
           errorType: 'NOT_FOUND',
           timestamp: new Date().toISOString()
         });
@@ -663,6 +663,40 @@ const problemCreationSchema = Joi.object({
 // Применяем НОВУЮ валидацию к методам
 const validateProblemCreation = newValidateRequest(problemCreationValidation);
 const validateProblemUpdate = validateRequest(problemValidation.update);
+
+/**
+ * Создание проблемы без валидации ID (временное решение)
+ */
+export const createProblemNew = async (req, res, next) => {
+  try {
+    console.log('🆕 Creating problem with new validation');
+    const problemData = req.body;
+
+    // Проверяем существование устройства
+    if (problemData.device_id) {
+      const device = await deviceModel.findById(problemData.device_id);
+      if (!device || !device.is_active) {
+        return res.status(400).json({
+          success: false,
+          error: 'Указанное устройство не найдено или неактивно',
+          errorType: 'VALIDATION_ERROR',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    const newProblem = await problemModel.create(problemData);
+
+    res.status(201).json({
+      success: true,
+      data: newProblem,
+      message: 'Проблема успешно создана',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Экспортируем методы с примененной валидацией
 export const getProblems = problemController.getProblems.bind(problemController);
