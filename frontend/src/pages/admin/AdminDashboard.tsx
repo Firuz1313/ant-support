@@ -8,6 +8,7 @@ import { useProblems, useProblemStats } from "@/hooks/useProblems";
 import { useSteps } from "@/hooks/useSteps";
 import { useActiveSessions, useSessionStats } from "@/hooks/useSessions";
 import CRUDTestPanel from "@/components/admin/CRUDTestPanel";
+import ApiTestPanel from "@/components/admin/ApiTestPanel";
 import {
   BarChart3,
   TrendingUp,
@@ -520,8 +521,11 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* CRUD Testing Panel */}
-      <CRUDTestPanel />
+      {/* Testing Panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CRUDTestPanel />
+        <ApiTestPanel />
+      </div>
 
       {/* Recent Problems */}
       <Card>
