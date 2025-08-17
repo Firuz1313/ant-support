@@ -41,17 +41,19 @@ export const clearAllData = async (req, res) => {
       }
     }
     
-    // Re-enable foreign key checks
-    await query('SET session_replication_role = DEFAULT;');
-    
     // Verify tables are empty
     const tablesToCheck = ['devices', 'problems', 'diagnostic_steps', 'diagnostic_sessions', 'tv_interfaces', 'tv_interface_marks'];
     const rowCounts = {};
-    
+
     for (const tableName of tablesToCheck) {
       try {
-        const result = await query(`SELECT COUNT(*) as count FROM ${tableName}`);
-        rowCounts[tableName] = parseInt(result.rows[0].count);
+        const result = await new Promise((resolve, reject) => {
+          database.get(`SELECT COUNT(*) as count FROM ${tableName}`, (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+          });
+        });
+        rowCounts[tableName] = parseInt(result.count);
       } catch (error) {
         rowCounts[tableName] = 'N/A';
       }
