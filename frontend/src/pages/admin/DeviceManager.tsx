@@ -177,6 +177,19 @@ const DeviceManager = () => {
       }
     });
 
+    // Check for duplicate names before sending request
+    if (changedData.name) {
+      const duplicateDevice = devices.find(d =>
+        d.name.toLowerCase() === changedData.name.toLowerCase() &&
+        d.id !== selectedDevice.id
+      );
+
+      if (duplicateDevice) {
+        alert(`Конфликт: Устройство с названием "${changedData.name}" уже существует.\n\nПопробу��те использовать другое название.`);
+        return;
+      }
+    }
+
     // If no changes, don't send request
     if (Object.keys(changedData).length === 0) {
       console.log("No changes detected, skipping update");
@@ -284,7 +297,7 @@ const DeviceManager = () => {
             Управление приставками
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Создание и настройка моделей ТВ-приставок для системы поддержки
+            Соз��ание и настройка моделей ТВ-приставок для системы поддержки
           </p>
         </div>
         <div className="flex space-x-2">
