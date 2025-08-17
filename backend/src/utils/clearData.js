@@ -43,8 +43,11 @@ async function clearAllData() {
     for (const clearQuery of clearQueries) {
       console.log(`   Executing: ${clearQuery}`);
       const result = await query(clearQuery);
-      console.log(`   ✅ Cleared ${result.rowCount || 0} rows`);
+      console.log(`   ✅ Table cleared`);
     }
+
+    // Re-enable foreign key checks
+    await query('SET session_replication_role = DEFAULT;');
     
     // Reset auto-increment sequences
     console.log('🔄 Resetting auto-increment sequences...');
