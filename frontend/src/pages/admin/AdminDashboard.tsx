@@ -131,9 +131,42 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Fallback: show helpful message
+      // Fallback: try the new problems endpoint
+      try {
+        const newProblemsResponse = await fetch('/api/v1/problems/new', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            device_id: "openbox",
+            title: "Тест CRUD операций",
+            description: "Тестовая проблема для проверки восстановленных CRUD операций",
+            category: "moderate",
+            status: "published",
+            priority: 3,
+            estimated_time: 5
+          })
+        });
+
+        if (newProblemsResponse.ok) {
+          console.log('✅ Data created successfully via new problems endpoint');
+          window.location.reload();
+          return;
+        } else {
+          const errorData = await newProblemsResponse.json();
+          console.log('❌ New problems endpoint also failed:', errorData);
+        }
+      } catch (e) {
+        console.log('⚠️ New problems endpoint not available');
+      }
+
+      // Final fallback: show helpful message with manual solution
       console.log('❌ Could not create test data automatically');
-      alert('Не удалось создать тестовые данные автоматически. Валидация API блокирует создание проблем без ID, а проблемы должны использовать SERIAL auto-increment.');
+      alert('CRUD операции заблокированы валидацией. Требуется исправить валидацию на backend для создания проблем с SERIAL ID.');
+
+      // Покажем, что мы можем делать с существующими данными
+      console.log('✅ Показываем работу с существующими устройствами...');
 
     } catch (error) {
       console.error('Seed error:', error);
@@ -185,7 +218,7 @@ const AdminDashboard = () => {
             Панель управления
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Общий обзор системы диагностики ТВ-приставок
+            Общий обзор сис��емы диагностики ТВ-приставок
           </p>
         </div>
         <div className="flex space-x-2">
