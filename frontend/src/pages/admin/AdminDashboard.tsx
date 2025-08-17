@@ -9,6 +9,7 @@ import { useSteps } from "@/hooks/useSteps";
 import { useActiveSessions, useSessionStats } from "@/hooks/useSessions";
 import CRUDTestPanel from "@/components/admin/CRUDTestPanel";
 import ApiTestPanel from "@/components/admin/ApiTestPanel";
+import DeviceUpdateTest from "@/components/admin/DeviceUpdateTest";
 import {
   BarChart3,
   TrendingUp,
