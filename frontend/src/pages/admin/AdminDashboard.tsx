@@ -97,20 +97,67 @@ const AdminDashboard = () => {
   const handleSeedData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/v1/test-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
 
-      if (response.ok) {
-        console.log('Database seeded successfully');
+      // Create test problems manually using the API client
+      const testProblems = [
+        {
+          device_id: "openbox",
+          title: "Нет сигнала",
+          description: "На экране телевизора отображается сообщение 'Нет сигнала' или черный экран",
+          category: "critical",
+          icon: "Monitor",
+          color: "from-red-500 to-red-600",
+          priority: 5,
+          estimated_time: 10,
+          difficulty: "beginner",
+          success_rate: 95,
+          status: "published"
+        },
+        {
+          device_id: "openbox",
+          title: "Пульт не работает",
+          description: "Пульт дистанционного управления не реагирует на нажатие кнопок",
+          category: "moderate",
+          icon: "Radio",
+          color: "from-orange-500 to-orange-600",
+          priority: 3,
+          estimated_time: 5,
+          difficulty: "beginner",
+          success_rate: 90,
+          status: "published"
+        }
+      ];
+
+      // Try to create problems one by one
+      let successCount = 0;
+      for (const problem of testProblems) {
+        try {
+          const response = await fetch('/api/v1/problems', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(problem)
+          });
+
+          if (response.ok) {
+            successCount++;
+            console.log(`Created problem: ${problem.title}`);
+          } else {
+            const errorData = await response.json();
+            console.log(`Failed to create problem: ${problem.title}`, errorData);
+          }
+        } catch (error) {
+          console.log(`Error creating problem: ${problem.title}`, error);
+        }
+      }
+
+      if (successCount > 0) {
+        console.log(`Successfully created ${successCount} problems`);
         // Refresh the page to show new data
         window.location.reload();
       } else {
-        const errorText = await response.text();
-        console.error('Failed to seed database:', errorText);
+        console.log('No problems were created successfully');
       }
     } catch (error) {
       console.error('Seed error:', error);
