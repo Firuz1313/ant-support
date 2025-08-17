@@ -23,7 +23,7 @@ const commonSchemas = {
   role: Joi.string().valid('admin', 'moderator', 'user')
 };
 
-// Схемы валидации для устройств
+// Схемы валидации для устрой��тв
 export const deviceValidation = {
   create: Joi.object({
     id: commonSchemas.id,
@@ -57,7 +57,7 @@ export const deviceValidation = {
 // Схемы валидации для проблем
 export const problemValidation = {
   create: Joi.object({
-    id: Joi.string().min(1).max(255).optional(),
+    // Remove ID field completely for problems since they use SERIAL
     device_id: commonSchemas.id.required(),
     title: Joi.string().min(1).max(500).required(),
     description: commonSchemas.longText,
