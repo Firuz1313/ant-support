@@ -1,5 +1,5 @@
--- ANT Support Database Schema
--- Full migration with all tables and relationships
+-- ANT Support Database Schema - Simplified Initial Version
+-- Create basic tables first, add constraints later if needed
 
 -- Create extension for UUID generation
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS devices (
 -- Problems table - diagnostic problems
 CREATE TABLE IF NOT EXISTS problems (
     id SERIAL PRIMARY KEY,
-    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE CASCADE,
+    device_id VARCHAR(255),
     title VARCHAR(255) NOT NULL,
     description TEXT,
     severity VARCHAR(50) DEFAULT 'medium' CHECK (severity IN ('low', 'medium', 'high', 'critical')),
@@ -58,10 +58,10 @@ CREATE TABLE IF NOT EXISTS problems (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Remote controls table (create before diagnostic_steps for FK reference)
+-- Remote controls table
 CREATE TABLE IF NOT EXISTS remotes (
     id VARCHAR(255) PRIMARY KEY,
-    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE SET NULL,
+    device_id VARCHAR(255),
     name VARCHAR(255) NOT NULL,
     manufacturer VARCHAR(255),
     model VARCHAR(255),
@@ -78,10 +78,10 @@ CREATE TABLE IF NOT EXISTS remotes (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TV interfaces table - screenshots and interface layouts (create before diagnostic_steps)
+-- TV interfaces table - screenshots and interface layouts
 CREATE TABLE IF NOT EXISTS tv_interfaces (
     id VARCHAR(255) PRIMARY KEY,
-    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE CASCADE,
+    device_id VARCHAR(255),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     type VARCHAR(100) DEFAULT 'home' CHECK (type IN ('home', 'settings', 'guide', 'custom')),
@@ -98,8 +98,8 @@ CREATE TABLE IF NOT EXISTS tv_interfaces (
 -- Diagnostic steps table
 CREATE TABLE IF NOT EXISTS diagnostic_steps (
     id VARCHAR(255) PRIMARY KEY,
-    problem_id INTEGER REFERENCES problems(id) ON DELETE CASCADE,
-    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE CASCADE,
+    problem_id INTEGER,
+    device_id VARCHAR(255),
     step_number INTEGER NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
@@ -107,22 +107,20 @@ CREATE TABLE IF NOT EXISTS diagnostic_steps (
     expected_result TEXT,
     estimated_time INTEGER DEFAULT 30, -- in seconds
     step_type VARCHAR(50) DEFAULT 'action' CHECK (step_type IN ('action', 'check', 'info', 'warning')),
-    remote_id VARCHAR(255) REFERENCES remotes(id) ON DELETE SET NULL,
-    tv_interface_id VARCHAR(255) REFERENCES tv_interfaces(id) ON DELETE SET NULL,
+    remote_id VARCHAR(255),
+    tv_interface_id VARCHAR(255),
     media_url TEXT, -- images, videos for this step
     is_optional BOOLEAN DEFAULT false,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(problem_id, step_number)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
 
 -- TV interface marks/annotations
 CREATE TABLE IF NOT EXISTS tv_interface_marks (
     id VARCHAR(255) PRIMARY KEY,
-    tv_interface_id VARCHAR(255) REFERENCES tv_interfaces(id) ON DELETE CASCADE,
-    step_id VARCHAR(255) REFERENCES diagnostic_steps(id) ON DELETE SET NULL,
+    tv_interface_id VARCHAR(255),
+    step_id VARCHAR(255),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     mark_type VARCHAR(50) DEFAULT 'point' CHECK (mark_type IN ('point', 'area', 'arrow', 'highlight')),
@@ -146,9 +144,9 @@ CREATE TABLE IF NOT EXISTS tv_interface_marks (
 -- Diagnostic sessions table - track user sessions
 CREATE TABLE IF NOT EXISTS diagnostic_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE SET NULL,
-    problem_id INTEGER REFERENCES problems(id) ON DELETE SET NULL,
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    device_id VARCHAR(255),
+    problem_id INTEGER,
+    user_id UUID,
     user_name VARCHAR(255), -- For anonymous users
     session_token VARCHAR(255),
     start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -170,8 +168,8 @@ CREATE TABLE IF NOT EXISTS diagnostic_sessions (
 -- Session steps - track individual step completions
 CREATE TABLE IF NOT EXISTS session_steps (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    session_id UUID REFERENCES diagnostic_sessions(id) ON DELETE CASCADE,
-    step_id VARCHAR(255) REFERENCES diagnostic_steps(id) ON DELETE CASCADE,
+    session_id UUID,
+    step_id VARCHAR(255),
     step_number INTEGER NOT NULL,
     started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     completed_at TIMESTAMP WITH TIME ZONE,
@@ -187,7 +185,7 @@ CREATE TABLE IF NOT EXISTS session_steps (
 -- Step actions table - predefined actions for steps
 CREATE TABLE IF NOT EXISTS step_actions (
     id VARCHAR(255) PRIMARY KEY,
-    step_id VARCHAR(255) REFERENCES diagnostic_steps(id) ON DELETE CASCADE,
+    step_id VARCHAR(255),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     action_type VARCHAR(100) NOT NULL, -- 'button_press', 'wait', 'check', etc.
@@ -206,7 +204,7 @@ CREATE TABLE IF NOT EXISTS change_logs (
     entity_id VARCHAR(255) NOT NULL,
     action VARCHAR(50) NOT NULL CHECK (action IN ('create', 'update', 'delete', 'archive')),
     changes JSONB, -- Old and new values
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    user_id UUID,
     user_name VARCHAR(255),
     user_role VARCHAR(50),
     ip_address INET,
@@ -327,8 +325,24 @@ INSERT INTO site_settings DEFAULT VALUES ON CONFLICT (id) DO NOTHING;
 -- Insert sample devices (from mock data)
 INSERT INTO devices (id, name, brand, model, type, description, color, is_active) VALUES
 ('openbox', 'OpenBox', 'OpenBox', 'Standard', 'set_top_box', 'Стандартные приставки OpenBox для цифрового телевидения', 'from-blue-500 to-blue-600', true),
-('uclan', 'UCLAN', 'UCLAN', 'HD Series', 'set_top_box', 'Высококачественные HD приставки UCLAN', 'from-green-500 to-green-600', true),
+('uclan', 'UCLAN', 'UCLAN', 'HD Series', 'set_top_box', '��ысококачественные HD приставки UCLAN', 'from-green-500 to-green-600', true),
 ('hdbox', 'HDBox', 'HDBox', 'Pro', 'set_top_box', 'Профессиональные приставки HDBox', 'from-purple-500 to-purple-600', true),
 ('openbox_gold', 'OpenBox Gold', 'OpenBox', 'Gold Edition', 'set_top_box', 'Премиум приставки OpenBox Gold с расширенными возможностями', 'from-yellow-500 to-yellow-600', true),
 ('skyway', 'SkyWay Light', 'SkyWay', 'Light', 'set_top_box', 'Компактные приставки SkyWay Light', 'from-orange-500 to-orange-600', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Sample TV interfaces
+INSERT INTO tv_interfaces (id, device_id, name, description, type, is_active) VALUES
+('tv_int_825', 'openbox', 'OpenBox Main Menu', 'Main menu interface for OpenBox devices', 'home', true),
+('tv_int_826', 'uclan', 'UCLAN Settings', 'Settings interface for UCLAN devices', 'settings', true),
+('tv_int_827', 'hdbox', 'HDBox Channel Guide', 'Channel guide interface for HDBox devices', 'guide', true),
+('tv_int_828', 'openbox', 'OpenBox Главное меню', 'Main menu interface showing when OpenBox is working', 'home', true),
+('tv_int_829', 'openbox', 'OpenBox Настройки', 'Settings interface for OpenBox devices', 'settings', true),
+('tv_int_502', 'openbox', 'Generic TV Interface', 'Generic interface for diagnostic purposes', 'custom', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Sample TV interface marks
+INSERT INTO tv_interface_marks (id, tv_interface_id, step_id, name, description, mark_type, shape, position, size, color, border_color, is_clickable, is_highlightable, is_active, is_visible) VALUES
+('mark_sample_1', 'tv_int_825', NULL, 'Main Menu Button', 'Click here to access the main menu', 'point', 'circle', '{"x": 200, "y": 150}', '{"width": 30, "height": 30}', '#3b82f6', '#1e40af', true, true, true, true),
+('mark_sample_2', 'tv_int_825', 'step-openbox-sample-1', 'Settings Area', 'Navigate to settings section', 'area', 'rectangle', '{"x": 300, "y": 200}', '{"width": 100, "height": 50}', '#10b981', '#059669', true, true, true, true)
 ON CONFLICT (id) DO NOTHING;
