@@ -1,5 +1,6 @@
 import Device from '../models/Device.js';
 import { deviceValidation, validateRequest } from '../middleware/validateRequest.js';
+import { deviceCreationValidation, validateRequest as newValidateRequest } from '../middleware/newValidation.js';
 
 const deviceModel = new Device();
 
@@ -42,7 +43,7 @@ class DeviceController {
         // Для админ панели - расширенная информация
         devices = await deviceModel.getForAdmin(filters, options);
       } else if (include_stats === 'true') {
-        // С статис��икой
+        // С статистикой
         devices = await deviceModel.findAllWithStats(filters, options);
       } else {
         // Обычный список
@@ -172,7 +173,7 @@ class DeviceController {
         if (duplicateDevice && String(duplicateDevice.id) !== String(id)) {
           return res.status(409).json({
             success: false,
-            error: 'Устройство с таким названием уже существует',
+            error: 'Устройство с таким название�� уже существует',
             errorType: 'DUPLICATE_ERROR',
             timestamp: new Date().toISOString()
           });
@@ -358,7 +359,7 @@ class DeviceController {
   }
 
   /**
-   * По��учение статистики устройств
+   * Получение статистики устройств
    * GET /api/v1/devices/stats
    */
   async getDeviceStats(req, res, next) {
@@ -397,7 +398,7 @@ class DeviceController {
         if (!update.id || !update.data) {
           return res.status(400).json({
             success: false,
-            error: 'Каждое обновление должно содержать id и data',
+            error: 'Каждое обновление должно сод��ржать id и data',
             errorType: 'VALIDATION_ERROR',
             timestamp: new Date().toISOString()
           });
