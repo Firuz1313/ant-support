@@ -159,10 +159,39 @@ const DeviceManager = () => {
   const handleEdit = async () => {
     if (!selectedDevice) return;
 
+    // Only send changed fields to avoid 409 conflicts
+    const originalData = {
+      name: selectedDevice.name,
+      brand: selectedDevice.brand,
+      model: selectedDevice.model,
+      description: selectedDevice.description,
+      imageUrl: selectedDevice.imageUrl || "",
+      logoUrl: selectedDevice.logoUrl || "",
+      color: selectedDevice.color,
+    };
+
+    const changedData: any = {};
+    Object.keys(formData).forEach(key => {
+      if (formData[key as keyof typeof formData] !== originalData[key as keyof typeof originalData]) {
+        changedData[key] = formData[key as keyof typeof formData];
+      }
+    });
+
+    // If no changes, don't send request
+    if (Object.keys(changedData).length === 0) {
+      console.log("No changes detected, skipping update");
+      setIsEditDialogOpen(false);
+      setSelectedDevice(null);
+      resetForm();
+      return;
+    }
+
+    console.log("Sending only changed fields:", changedData);
+
     try {
       await updateDeviceMutation.mutateAsync({
         id: selectedDevice.id,
-        data: formData
+        data: changedData
       });
       setIsEditDialogOpen(false);
       setSelectedDevice(null);
@@ -449,7 +478,7 @@ const DeviceManager = () => {
                       size="sm"
                       onClick={() => handleToggleStatus(device.id)}
                       title={
-                        device.isActive ? "Д��активировать" : "Активировать"
+                        device.isActive ? "Д��акти��ировать" : "Активировать"
                       }
                     >
                       {device.isActive ? (
@@ -555,7 +584,7 @@ const DeviceManager = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-imageUrl">URL изображения</Label>
+                <Label htmlFor="edit-imageUrl">URL изо��ражения</Label>
                 <Input
                   id="edit-imageUrl"
                   value={formData.imageUrl}
