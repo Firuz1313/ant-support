@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,49 +51,19 @@ interface User {
 }
 
 const UsersManager = () => {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "Администратор",
-      email: "admin@antsupport.com",
-      role: "admin",
-      status: "active",
-      lastLogin: "2024-01-20",
-      createdAt: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Иван Петров",
-      email: "ivan.petrov@antsupport.com",
-      role: "editor",
-      status: "active",
-      lastLogin: "2024-01-19",
-      createdAt: "2024-01-16",
-    },
-    {
-      id: "3",
-      name: "Мария Сидорова",
-      email: "maria.sidorova@antsupport.com",
-      role: "editor",
-      status: "inactive",
-      lastLogin: "2024-01-15",
-      createdAt: "2024-01-17",
-    },
-    {
-      id: "4",
-      name: "Алексей Кузнецов",
-      email: "alexey.kuznetsov@antsupport.com",
-      role: "viewer",
-      status: "active",
-      lastLogin: "2024-01-18",
-      createdAt: "2024-01-18",
-    },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Load users on component mount (placeholder for future API implementation)
+  useEffect(() => {
+    // TODO: Implement API call to load users
+    // Example: loadUsers();
+  }, []);
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -117,50 +87,83 @@ const UsersManager = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleCreate = () => {
-    const newUser: User = {
-      id: Date.now().toString(),
-      ...formData,
-      status: "active",
-      lastLogin: "Никогда",
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setUsers([...users, newUser]);
-    setIsCreateDialogOpen(false);
-    resetForm();
+  const handleCreate = async () => {
+    setIsLoading(true);
+    try {
+      // TODO: Implement API call to create user
+      // const response = await usersAPI.create(formData);
+
+      // Temporary local implementation until API is ready
+      const newUser: User = {
+        id: Date.now().toString(),
+        ...formData,
+        status: "active",
+        lastLogin: "Никогда",
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setUsers([...users, newUser]);
+      setIsCreateDialogOpen(false);
+      resetForm();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!selectedUser) return;
-    
-    const updatedUsers = users.map((user) =>
-      user.id === selectedUser.id
-        ? { ...user, ...formData }
-        : user
-    );
-    setUsers(updatedUsers);
-    setIsEditDialogOpen(false);
-    setSelectedUser(null);
-    resetForm();
+
+    setIsLoading(true);
+    try {
+      // TODO: Implement API call to update user
+      // const response = await usersAPI.update(selectedUser.id, formData);
+
+      // Temporary local implementation until API is ready
+      const updatedUsers = users.map((user) =>
+        user.id === selectedUser.id
+          ? { ...user, ...formData }
+          : user
+      );
+      setUsers(updatedUsers);
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+      resetForm();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDelete = (userId: string) => {
-    if (userId === "1") return; // Prevent deleting the main admin
-    setUsers(users.filter((user) => user.id !== userId));
+  const handleDelete = async (userId: string) => {
+    setIsLoading(true);
+    try {
+      // TODO: Implement API call to delete user
+      // const response = await usersAPI.delete(userId);
+
+      // Temporary local implementation until API is ready
+      setUsers(users.filter((user) => user.id !== userId));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleToggleStatus = (userId: string) => {
-    if (userId === "1") return; // Prevent deactivating the main admin
-    
-    const updatedUsers = users.map((user) =>
-      user.id === userId
-        ? {
-            ...user,
-            status: user.status === "active" ? "inactive" : "active" as User["status"],
-          }
-        : user
-    );
-    setUsers(updatedUsers);
+  const handleToggleStatus = async (userId: string) => {
+    setIsLoading(true);
+    try {
+      // TODO: Implement API call to toggle user status
+      // const response = await usersAPI.toggleStatus(userId);
+
+      // Temporary local implementation until API is ready
+      const updatedUsers = users.map((user) =>
+        user.id === userId
+          ? {
+              ...user,
+              status: user.status === "active" ? "inactive" : "active" as User["status"],
+            }
+          : user
+      );
+      setUsers(updatedUsers);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const openEditDialog = (user: User) => {
@@ -215,7 +218,7 @@ const UsersManager = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Добавить новог�� пользователя</DialogTitle>
+              <DialogTitle>Добавить нового пользователя</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -260,7 +263,7 @@ const UsersManager = () => {
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Отмена
                 </Button>
-                <Button onClick={handleCreate} disabled={!formData.name || !formData.email}>
+                <Button onClick={handleCreate} disabled={!formData.name || !formData.email || isLoading}>
                   Создать
                 </Button>
               </div>
@@ -513,7 +516,7 @@ const UsersManager = () => {
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Отмена
               </Button>
-              <Button onClick={handleEdit} disabled={!formData.name || !formData.email}>
+              <Button onClick={handleEdit} disabled={!formData.name || !formData.email || isLoading}>
                 Сохранить
               </Button>
             </div>
