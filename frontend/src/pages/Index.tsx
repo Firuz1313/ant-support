@@ -21,10 +21,23 @@ import {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { devices, problems, getEntityStats } = useData();
+  const { data: devicesData } = useDevices(1, 10);
+  const { data: problemsData } = useProblems(1, 10);
 
-  const deviceStats = getEntityStats("devices");
-  const problemStats = getEntityStats("problems");
+  const devices = devicesData?.data || [];
+  const problems = problemsData?.data || [];
+
+  // Calculate stats from actual data
+  const deviceStats = {
+    total: devices.length,
+    active: devices.filter(d => d.isActive).length,
+    inactive: devices.filter(d => !d.isActive).length
+  };
+  const problemStats = {
+    total: problems.length,
+    active: problems.filter(p => p.status === 'published').length,
+    inactive: problems.filter(p => p.status !== 'published').length
+  };
 
   const handleStartDiagnostic = () => {
     navigate("/devices");
@@ -241,7 +254,7 @@ const Index = () => {
                   <Eye className="h-8 w-8 text-white" />
                 </div>
                 <h4 className="text-lg font-semibold text-white mb-2">
-                  Интеграция в диагностику
+                  Интегр��ция в диагностику
                 </h4>
                 <p className="text-gray-300 text-sm">
                   Созданные и��терфейсы автоматически отображаются в процессе диагностики
