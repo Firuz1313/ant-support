@@ -33,7 +33,7 @@ const router = express.Router();
  * @query {number} [page=1] - Номер страницы
  * @query {number} [limit=20] - Количество элементов на странице
  * @query {string} [sort=priority] - Поле для сортировки
- * @query {string} [order=desc] - Направление сортировки (asc, desc)
+ * @query {string} [order=desc] - Направление сортиров��и (asc, desc)
  * @query {boolean} [include_details=false] - Включить детальную информацию
  * @query {boolean} [admin=false] - Расширенная информация для админ панели
  */
@@ -69,7 +69,7 @@ router.get("/stats", getProblemStats);
  * @desc Экспорт проблем
  * @access Public
  * @query {string} [format=json] - Формат экспорта
- * @query {string} [device_id] - Фильтр по устройству
+ * @query {string} [device_id] - Фильтр по устр��йству
  * @query {boolean} [include_steps=false] - Включить связанные шаги
  */
 router.get("/export", exportProblems);
@@ -125,6 +125,13 @@ router.get("/:id", getProblemById);
  * @body {object} [problem.metadata] - Дополнительные данные
  */
 router.post("/", createProblem);
+
+/**
+ * @route POST /api/v1/problems/new
+ * @desc Создание новой проблемы (исправленная валидация)
+ * @access Private
+ */
+router.post("/new", createProblemNew);
 
 /**
  * @route POST /api/v1/problems/:id/duplicate
