@@ -13,9 +13,8 @@ dotenv.config();
 
 const { Pool, Client } = pkg;
 
-// Check if we should use mock database
-const USE_MOCK_DB =
-  process.env.USE_MOCK_DB === "true" || process.env.NODE_ENV === "mock";
+// Always use real PostgreSQL database
+const USE_MOCK_DB = false;
 
 // Конфигурация подключения к PostgreSQL
 const dbConfig = process.env.DATABASE_URL ? {
@@ -23,7 +22,7 @@ const dbConfig = process.env.DATABASE_URL ? {
   ssl: { rejectUnauthorized: false },
 
   // Настройки pool соединений
-  max: 20, // максималь��ое количество соединений в pool
+  max: 20, // максимальное количество соединений в pool
   min: 2, // минимальное количество соединений
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
   connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
@@ -302,7 +301,7 @@ export async function runMigrations() {
       console.log(`✅ Миграция ${filename} выполнена успешно`);
     }
 
-    console.log("🎉 Все миграции выполнены успешно");
+    console.log("🎉 Все ��играции выполнены успешно");
   } catch (error) {
     console.error("❌ Ошибка выполнения миграций:", error.message);
     throw error;
@@ -391,7 +390,7 @@ export async function cleanupOldData(daysToKeep = 90) {
       deletedLogs: logsResult.rowCount,
     };
   } catch (error) {
-    console.error("❌ Ошибка очистки данных:", error.message);
+    console.error("�� Ошибка очистки данных:", error.message);
     throw error;
   }
 }
