@@ -166,7 +166,7 @@ const AdminDashboard = () => {
                 {selectedPeriod === "week"
                   ? "Неделя"
                   : selectedPeriod === "month"
-                    ? "Месяц"
+                    ? "Мес��ц"
                     : "Год"}
               </Button>
             </DropdownMenuTrigger>
@@ -382,15 +382,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={handleSeedData}
-                disabled={isLoading}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Заполнить тестовыми данными
-              </Button>
+              {/* Removed seed data functionality - all data comes from database */}
               <Button className="w-full justify-start" variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Добавить устройство
