@@ -124,17 +124,27 @@ export class ApiClient {
       console.log(`📡 Fetch completed with status: ${response.status}`);
       clearTimeout(timeoutId);
 
-      // Robust response reading - read only once, no cloning
+      // Robust response reading with proper error handling
       let responseData: any = null;
       let responseText = "";
 
-      try {
-        responseText = await response.text();
-        console.log(
-          `📡 Response text (first 100 chars): ${responseText.substring(0, 100)}`,
-        );
-      } catch (textError) {
-        console.error(`📡 Failed to read response text:`, textError);
+      // Check if response body exists and can be read
+      const contentLength = response.headers.get('content-length');
+      const hasBody = contentLength && contentLength !== '0';
+
+      if (hasBody || !contentLength) {
+        try {
+          responseText = await response.text();
+          console.log(
+            `📡 Response text (${responseText.length} chars): ${responseText.substring(0, 100)}`,
+          );
+        } catch (textError) {
+          console.error(`📡 Failed to read response text:`, textError);
+          // Don't retry - this prevents the "already read" error
+          responseText = "";
+        }
+      } else {
+        console.log(`📡 Empty response body (Content-Length: ${contentLength})`);
         responseText = "";
       }
 
@@ -292,7 +302,7 @@ const getApiBaseUrl = (): string => {
       return proxyUrl;
     }
 
-    // Локальн��я разработка - прямое подключение к бэкенду
+    // Локальн���я разработка - прямое подключение к бэкенду
     if (hostname === "localhost" && port === "8080") {
       const directUrl = "http://localhost:3000/api";
       console.log("🏠 Local development - using direct connection:", directUrl);
