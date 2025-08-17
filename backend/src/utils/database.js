@@ -23,7 +23,7 @@ const dbConfig = process.env.DATABASE_URL ? {
 
   // Настройки pool соединений
   max: 20, // максимальное количество соединений в pool
-  min: 2, // мин��мальное количество соединений
+  min: 2, // минимальное количество соединений
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
   connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
   maxUses: 7500, // максимальное количество использований соединения
@@ -163,51 +163,9 @@ export async function transaction(callback) {
 
 // Функция создания базы данных (если не существует)
 export async function createDatabase() {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.createDatabase();
-  }
-
-  const adminConfig = {
-    ...dbConfig,
-    database: "postgres", // подключаемся к системной БД для создания новой
-  };
-
-  let client;
-
-  try {
-    client = new Client(adminConfig);
-    await client.connect();
-
-    // Проверяем, существует ли база данных
-    const checkResult = await client.query(
-      "SELECT 1 FROM pg_database WHERE datname = $1",
-      [dbConfig.database],
-    );
-
-    if (checkResult.rows.length === 0) {
-      console.log(`📊 Создание базы данных: ${dbConfig.database}`);
-      await client.query(`CREATE DATABASE "${dbConfig.database}"`);
-      console.log("✅ База данных создана успешно");
-    } else {
-      console.log(`📊 База данных ${dbConfig.database} уже существует`);
-    }
-  } catch (error) {
-    console.error("❌ Ошибка создания базы данных:", error.message);
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      if (!mockDb) {
-        mockDb = await import("./mockDatabase.js");
-      }
-      return await mockDb.createDatabase();
-    }
-    throw error;
-  } finally {
-    if (client) {
-      await client.end();
-    }
-  }
+  // For Neon, database already exists, this is a no-op
+  console.log("📊 Using existing Neon database");
+  return true;
 }
 
 // Функция выполнения миграций
@@ -247,7 +205,7 @@ export async function runMigrations() {
         continue;
       }
 
-      console.log(`🔄 Выполнение миграции: ${filename}`);
+      console.log(`🔄 Выпол��ение миграции: ${filename}`);
 
       const migrationPath = path.join(migrationsDir, filename);
       const migrationSQL = fs.readFileSync(migrationPath, "utf8");
