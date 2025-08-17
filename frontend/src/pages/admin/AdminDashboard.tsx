@@ -94,6 +94,30 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSeedData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/v1/seed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        console.log('Database seeded successfully');
+        // Refresh the page to show new data
+        window.location.reload();
+      } else {
+        console.error('Failed to seed database');
+      }
+    } catch (error) {
+      console.error('Seed error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleExport = async () => {
     try {
       // Create export data
@@ -115,12 +139,12 @@ const AdminDashboard = () => {
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(dataBlob);
-      
+
       const link = document.createElement("a");
       link.href = url;
       link.download = `ant-support-backup-${new Date().toISOString().split("T")[0]}.json`;
       link.click();
-      
+
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Export failed:", error);
@@ -152,7 +176,7 @@ const AdminDashboard = () => {
           </Button>
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
-            Эк��порт
+            Экспорт
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -316,7 +340,7 @@ const AdminDashboard = () => {
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Файловое хранилище</span>
+                <span className="text-sm font-medium">Файло��ое хранилище</span>
                 <Badge variant="default" className="bg-green-600">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Работает
@@ -377,6 +401,15 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={handleSeedData}
+                disabled={isLoading}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Заполнить тестовыми данными
+              </Button>
               <Button className="w-full justify-start" variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Добавить устройство
