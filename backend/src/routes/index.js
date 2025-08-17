@@ -6,6 +6,7 @@ import sessionRoutes from "./sessionRoutes.js";
 import tvInterfaceRoutes from "./tvInterfaceRoutes.js";
 import tvInterfaceMarkRoutes from "./tvInterfaceMarkRoutes.js";
 import cleanupRoutes from "./cleanupRoutes.js";
+import seedRoutes from "./seedRoutes.js";
 
 const router = express.Router();
 
@@ -146,7 +147,7 @@ router.get("/docs", (req, res) => {
             "GET /sessions/analytics": "Аналитика по времени",
             "GET /sessions/export": "Экспорт сессий",
             "POST /sessions/:id/complete": "Завершение сессии",
-            "POST /sessions/:id/progress": "Обновление прогресса",
+            "POST /sessions/:id/progress": "Обновление ��рогресса",
             "POST /sessions/cleanup": "Очистка с��арых сессий",
             "POST /sessions/:id/restore":
               "Восстановление архивированной сессии",
@@ -215,6 +216,7 @@ router.use(`${API_V1_PREFIX}/sessions`, sessionRoutes);
 router.use(`${API_V1_PREFIX}/tv-interfaces`, tvInterfaceRoutes);
 router.use(`${API_V1_PREFIX}/tv-interface-marks`, tvInterfaceMarkRoutes);
 router.use(`${API_V1_PREFIX}/cleanup`, cleanupRoutes);
+router.use(`${API_V1_PREFIX}/seed`, seedRoutes);
 
 // Обработчик для несуществующих эндпоинтов API
 router.use("*", (req, res) => {
