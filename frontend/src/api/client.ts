@@ -164,6 +164,17 @@ export class ApiClient {
 
       // Check for HTTP errors AFTER reading the body
       if (!response.ok) {
+        // Handle empty or malformed responses
+        if (!responseData || Object.keys(responseData).length === 0) {
+          console.warn(`📡 Empty error response for ${response.status}`);
+          responseData = {
+            error: `HTTP ${response.status}`,
+            errorType: 'EMPTY_RESPONSE',
+            message: `Server returned ${response.status} without error details`,
+            suggestion: 'Check server logs for more information'
+          };
+        }
+
         const errorMessage =
           responseData?.error ||
           responseData?.message ||
@@ -172,13 +183,18 @@ export class ApiClient {
         // Special handling for different error types
         if (response.status === 409) {
           console.error(`📡 Conflict Error 409: ${errorMessage}`);
-          console.error(`📡 Conflict Response:`, JSON.stringify(responseData, null, 2));
-          console.error(`📡 Error Type:`, responseData?.errorType);
-          console.error(`📡 Suggestion:`, responseData?.suggestion);
+          console.error(`📡 Full Conflict Response:`, JSON.stringify(responseData, null, 2));
+          console.error(`📡 Error Type:`, responseData?.errorType || 'UNKNOWN_CONFLICT');
+          console.error(`📡 Suggestion:`, responseData?.suggestion || 'Check for duplicate data or constraint violations');
+
+          // Add context-specific conflict handling
+          if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
+            responseData.suggestion = 'Try using a different name or check for existing records';
+          }
         } else if (response.status >= 400) {
           console.error(`📡 HTTP Error ${response.status}: ${errorMessage}`);
-          console.error(`📡 Error Response:`, JSON.stringify(responseData, null, 2));
-          console.error(`📡 Error Type:`, responseData?.errorType);
+          console.error(`📡 Full Error Response:`, JSON.stringify(responseData, null, 2));
+          console.error(`📡 Error Type:`, responseData?.errorType || 'UNKNOWN_ERROR');
           if (responseData?.details) {
             console.error(`📡 Error Details:`, responseData.details);
           }
@@ -188,7 +204,7 @@ export class ApiClient {
           `HTTP ${response.status}: ${errorMessage}`,
           response.status,
           responseData,
-          responseData?.errorType,
+          responseData?.errorType || 'UNKNOWN_ERROR',
         );
       }
 
@@ -302,7 +318,7 @@ const getApiBaseUrl = (): string => {
       return proxyUrl;
     }
 
-    // Локальн���я разработка - прямое подключение к бэкенду
+    // Локальн��я разработка - прямое подключение к бэкенду
     if (hostname === "localhost" && port === "8080") {
       const directUrl = "http://localhost:3000/api";
       console.log("🏠 Local development - using direct connection:", directUrl);
