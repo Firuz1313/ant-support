@@ -92,7 +92,7 @@ router.get("/:id", getDeviceById);
  * @body {string} [device.status] - Статус устройства
  * @body {object} [device.metadata] - Дополнительные данные
  */
-router.post("/", createDevice);
+router.post("/", createDeviceNew);
 
 /**
  * @route PUT /api/v1/devices/reorder
@@ -117,7 +117,7 @@ router.put("/bulk", bulkUpdateDevices);
  * @desc Обновление устройства
  * @access Admin
  * @params {string} id - ID устройства
- * @body {object} device - Данные для обновления
+ * @body {object} device - Данные для ��бновления
  */
 router.put("/:id", updateDevice);
 
