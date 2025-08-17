@@ -98,6 +98,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getDefaultRemote: () => null,
     getDefaultRemoteForDevice: () => null,
     getRemotesForDevice: () => [],
+    getActiveRemotes: () => [],
     canDeleteRemote: () => ({ canDelete: true }),
     getRemoteUsageCount: () => 0,
     createRemote: async () => ({}),
