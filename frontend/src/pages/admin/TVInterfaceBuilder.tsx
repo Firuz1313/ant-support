@@ -42,7 +42,7 @@ import {
   Copy,
   FolderOpen,
 } from "lucide-react";
-import ScreenshotBrowser from "@/components/admin/ScreenshotBrowser";
+// ScreenshotBrowser removed - functionality will be implemented via API
 import {
   Dialog,
   DialogContent,
@@ -235,7 +235,7 @@ const TVInterfaceBuilder = () => {
       console.error("Error creating TV interface:", error);
       toast({
         title: "Ошибка",
-        description: "Произошла ошибка при создании TV интерфейса",
+        description: "Произошл�� ошибка при создании TV интерфейса",
         variant: "destructive",
       });
     } finally {
@@ -948,7 +948,7 @@ const TVInterfaceBuilder = () => {
             </div>
 
             <div>
-              <Label htmlFor="edit-description">Описание</Label>
+              <Label htmlFor="edit-description">Описа��ие</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description || ""}
