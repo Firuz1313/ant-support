@@ -199,13 +199,22 @@ const DeviceManager = () => {
     } catch (error: any) {
       console.error("Error updating device:", error);
 
-      // Show user-friendly error messages
+      // Show detailed user-friendly error messages
       if (error?.status === 409) {
-        alert("Конфликт: Устройство с таким названием уже существует или произошел другой конфликт данных.");
+        const errorMsg = error?.response?.error || error?.message || 'Конфликт данных';
+        const suggestion = error?.response?.suggestion || 'Попробуйте использовать другое название';
+        alert(`Конфликт: ${errorMsg}\n\nРекомендация: ${suggestion}`);
       } else if (error?.status === 400) {
-        alert("Ошибка валидации: Проверьте правильность введенных данных.");
+        const details = error?.response?.details || [];
+        const detailsText = details.length > 0
+          ? details.map((d: any) => `${d.field}: ${d.message}`).join('\n')
+          : 'Проверьте правильность введенных данных';
+        alert(`Ошибка валидации:\n${detailsText}`);
+      } else if (error?.status === 0) {
+        alert("Ошибка соединения: Проверьте подключение к серверу.");
       } else {
-        alert("Произошла ошибка при обновлении устройства. Попробуйте еще раз.");
+        const errorMsg = error?.response?.error || error?.message || 'Неизвестная ошибка';
+        alert(`Произошла ошибка при обновлении устройства:\n${errorMsg}`);
       }
     }
   };
