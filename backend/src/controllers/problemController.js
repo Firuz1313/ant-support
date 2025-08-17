@@ -1,6 +1,7 @@
 import Problem from '../models/Problem.js';
 import Device from '../models/Device.js';
 import { problemValidation, validateRequest } from '../middleware/validateRequest.js';
+import Joi from 'joi';
 
 const problemModel = new Problem();
 const deviceModel = new Device();
@@ -10,7 +11,7 @@ const deviceModel = new Device();
  */
 class ProblemController {
   /**
-   * Получение списка проблем
+   * Получение спис��а проблем
    * GET /api/v1/problems
    */
   async getProblems(req, res, next) {
@@ -108,7 +109,7 @@ class ProblemController {
   }
 
   /**
-   * Создание новой проблемы
+   * Создание новой ��роблемы
    * POST /api/v1/problems
    */
   async createProblem(req, res, next) {
@@ -554,7 +555,7 @@ class ProblemController {
   }
 
   /**
-   * Обновление статистики проблемы
+   * Обновление стати��тики проблемы
    * POST /api/v1/problems/:id/update-stats
    */
   async updateProblemStats(req, res, next) {
@@ -641,8 +642,25 @@ class ProblemController {
 // Создаем экземпляр контроллера
 const problemController = new ProblemController();
 
+// Создаем новую валидацию без ID для создания проблем
+const problemCreationSchema = Joi.object({
+  device_id: Joi.string().min(1).max(255).required(),
+  title: Joi.string().min(1).max(500).required(),
+  description: Joi.string().max(10000).optional(),
+  category: Joi.string().valid('critical', 'moderate', 'minor', 'other').default('other'),
+  icon: Joi.string().max(100).default('HelpCircle'),
+  color: Joi.string().pattern(/^(from-\w+-\d+\s+to-\w+-\d+|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})$/).default('from-blue-500 to-blue-600'),
+  tags: Joi.array().items(Joi.any()).default([]),
+  priority: Joi.number().integer().min(1).default(1),
+  estimated_time: Joi.number().integer().min(1).default(5),
+  difficulty: Joi.string().valid('beginner', 'intermediate', 'advanced').default('beginner'),
+  success_rate: Joi.number().integer().min(0).max(100).default(100),
+  status: Joi.string().valid('draft', 'published', 'archived').default('draft'),
+  metadata: Joi.object().unknown(true).optional()
+});
+
 // Применяем валидацию к методам
-const validateProblemCreation = validateRequest(problemValidation.create);
+const validateProblemCreation = validateRequest(problemCreationSchema);
 const validateProblemUpdate = validateRequest(problemValidation.update);
 
 // Экспортируем методы с примененной валидацией
