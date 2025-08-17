@@ -98,6 +98,11 @@ export class ApiClient {
       try {
         const bodyData = JSON.parse(fetchOptions.body as string);
         console.log(`📤 Request body:`, JSON.stringify(bodyData, null, 2));
+
+        // Warn about empty update objects that might cause issues
+        if (fetchOptions.method === 'PUT' && Object.keys(bodyData).length === 0) {
+          console.warn(`⚠️  Empty PUT request body - this might cause validation errors`);
+        }
       } catch {
         console.log(`📤 Request body (non-JSON):`, fetchOptions.body);
       }
@@ -279,7 +284,7 @@ const getApiBaseUrl = (): string => {
 
     console.log("🌐 Current location:", window.location.href);
 
-    // В облачной среде fly.dev/builder.codes
+    // В о��лачной среде fly.dev/builder.codes
     if (hostname.includes("builder.codes") || hostname.includes("fly.dev")) {
       // Сначала пробуем proxy
       const proxyUrl = "/api";
