@@ -18,7 +18,17 @@ const USE_MOCK_DB =
   process.env.USE_MOCK_DB === "true" || process.env.NODE_ENV === "mock";
 
 // Конфигурация подключения к PostgreSQL
-const dbConfig = {
+const dbConfig = process.env.DATABASE_URL ? {
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+
+  // Настройки pool соединений
+  max: 20, // максималь��ое количество соединений в pool
+  min: 2, // минимальное количество соединений
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
+  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
+  maxUses: 7500, // максимальное количество использований соединения
+} : {
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT) || 5432,
   database: process.env.DB_NAME || "ant_support",
@@ -27,11 +37,11 @@ const dbConfig = {
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 
   // Настройки pool соединений
-  max: 20, // максимальное количество соединений в pool
-  min: 5, // минимальное количество соединений
-  idleTimeoutMillis: 30000, // время простоя перед закрытием соединения
-  connectionTimeoutMillis: 5000, // таймаут подключения
-  maxUses: 7500, // максимальное количество использований соединения
+  max: 20,
+  min: 2,
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
+  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
+  maxUses: 7500,
 };
 
 // Создание pool соединений
