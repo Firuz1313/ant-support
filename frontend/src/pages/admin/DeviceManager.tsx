@@ -40,7 +40,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useData } from "@/contexts/DataContext";
+import {
+  useDevices,
+  useCreateDevice,
+  useUpdateDevice,
+  useDeleteDevice,
+} from "@/hooks/useDevices";
 
 interface Device {
   id: string;
@@ -57,13 +62,12 @@ interface Device {
 }
 
 const DeviceManager = () => {
-  const {
-    devices,
-    createDevice,
-    updateDevice,
-    deleteDevice,
-    getProblemsForDevice,
-  } = useData();
+  const { data: devicesData } = useDevices(1, 50, { admin: true });
+  const createDeviceMutation = useCreateDevice();
+  const updateDeviceMutation = useUpdateDevice();
+  const deleteDeviceMutation = useDeleteDevice();
+
+  const devices = devicesData?.data || [];
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -146,7 +150,7 @@ const DeviceManager = () => {
 
   const handleCreate = async () => {
     try {
-      await createDevice({
+      await createDeviceMutation.mutateAsync({
         ...formData,
         isActive: true,
       });
@@ -160,18 +164,94 @@ const DeviceManager = () => {
   const handleEdit = async () => {
     if (!selectedDevice) return;
 
-    try {
-      await updateDevice(selectedDevice.id, formData);
+    // Only send changed fields to avoid 409 conflicts
+    const originalData = {
+      name: selectedDevice.name,
+      brand: selectedDevice.brand,
+      model: selectedDevice.model,
+      description: selectedDevice.description,
+      imageUrl: selectedDevice.imageUrl || "",
+      logoUrl: selectedDevice.logoUrl || "",
+      color: selectedDevice.color,
+    };
+
+    const changedData: any = {};
+    Object.keys(formData).forEach((key) => {
+      if (
+        formData[key as keyof typeof formData] !==
+        originalData[key as keyof typeof originalData]
+      ) {
+        changedData[key] = formData[key as keyof typeof formData];
+      }
+    });
+
+    // Check for duplicate names before sending request
+    if (changedData.name) {
+      const duplicateDevice = devices.find(
+        (d) =>
+          d.name.toLowerCase() === changedData.name.toLowerCase() &&
+          String(d.id) !== String(selectedDevice.id),
+      );
+
+      if (duplicateDevice) {
+        alert(
+          `Конфликт: Устройство с названием "${changedData.name}" уже с��ществует.\n\nПопробу��те использовать другое название.`,
+        );
+        return;
+      }
+    }
+
+    // If no changes, don't send request
+    if (Object.keys(changedData).length === 0) {
+      console.log("No changes detected, skipping update");
       setIsEditDialogOpen(false);
       setSelectedDevice(null);
       resetForm();
-    } catch (error) {
+      return;
+    }
+
+    console.log("Sending only changed fields:", changedData);
+
+    try {
+      await updateDeviceMutation.mutateAsync({
+        id: selectedDevice.id,
+        data: changedData,
+      });
+      setIsEditDialogOpen(false);
+      setSelectedDevice(null);
+      resetForm();
+    } catch (error: any) {
       console.error("Error updating device:", error);
+
+      // Show detailed user-friendly error messages
+      if (error?.status === 409) {
+        const errorMsg =
+          error?.response?.error || error?.message || "Конфликт данных";
+        const suggestion =
+          error?.response?.suggestion ||
+          "Попробуйте использовать другое название";
+        alert(`Конфликт: ${errorMsg}\n\nРекомендация: ${suggestion}`);
+      } else if (error?.status === 400) {
+        const details = error?.response?.details || [];
+        const detailsText =
+          details.length > 0
+            ? details.map((d: any) => `${d.field}: ${d.message}`).join("\n")
+            : "Проверьте правильность введенных данных";
+        alert(`Ошибка валидации:\n${detailsText}`);
+      } else if (error?.status === 0) {
+        alert("Ошибка соединения: Проверьте подключение к серверу.");
+      } else {
+        const errorMsg =
+          error?.response?.error || error?.message || "Неизвестная ошибка";
+        alert(`Произошла ошибка при обновлении устройства:\n${errorMsg}`);
+      }
     }
   };
 
   const handleDelete = async (deviceId: string) => {
-    const problemsCount = getProblemsForDevice(deviceId).length;
+    const device = devices.find((d) => d.id === deviceId);
+    const problemsCount =
+      device?.problems_count || device?.published_problems_count || 0;
     if (problemsCount > 0) {
       alert(
         `Нельзя удалить приставку с ${problemsCount} активными проблемами. Сначала удалите или переместите проблемы.`,
@@ -179,10 +259,10 @@ const DeviceManager = () => {
       return;
     }
     try {
-      await deleteDevice(deviceId);
+      await deleteDeviceMutation.mutateAsync({ id: deviceId });
     } catch (error) {
       console.error("Error deleting device:", error);
-      alert("Ошибка при удалении приставки");
+      alert("Ошибка при удален��и приставки");
     }
   };
 
@@ -234,7 +314,7 @@ const DeviceManager = () => {
             Управление приставками
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Создание и настройка моделей ТВ-приставок для системы поддержки
+            Соз��ание и настройка моделей ТВ-приставок для системы поддержки
           </p>
         </div>
         <div className="flex space-x-2">
@@ -395,7 +475,8 @@ const DeviceManager = () => {
       {/* Devices Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredDevices.map((device) => {
-          const problemsCount = getProblemsForDevice(device.id).length;
+          const problemsCount =
+            device.problems_count || device.published_problems_count || 0;
 
           return (
             <Card
@@ -446,7 +527,7 @@ const DeviceManager = () => {
                       size="sm"
                       onClick={() => handleToggleStatus(device.id)}
                       title={
-                        device.isActive ? "Деактивировать" : "Активировать"
+                        device.isActive ? "Д��активировать" : "Активировать"
                       }
                     >
                       {device.isActive ? (

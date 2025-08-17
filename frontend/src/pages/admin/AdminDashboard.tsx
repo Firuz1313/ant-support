@@ -1,9 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useData } from "@/contexts/DataContext";
+import { useDevices, useDeviceStats } from "@/hooks/useDevices";
+import { useProblems, useProblemStats } from "@/hooks/useProblems";
+import { useSteps } from "@/hooks/useSteps";
+import { useActiveSessions, useSessionStats } from "@/hooks/useSessions";
+import CRUDTestPanel from "@/components/admin/CRUDTestPanel";
+import ApiTestPanel from "@/components/admin/ApiTestPanel";
+import DeviceUpdateTest from "@/components/admin/DeviceUpdateTest";
 import {
   BarChart3,
   TrendingUp,
@@ -35,38 +41,50 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const AdminDashboard = () => {
-  const {
-    devices,
-    problems,
-    steps,
-    remotes,
-    sessions,
-    changeLogs,
-    getEntityStats,
-    getActiveSessions,
-    refreshData,
-    exportData,
-    siteSettings,
-  } = useData();
-
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState("week");
 
-  // Statistics
-  const deviceStats = getEntityStats("devices");
-  const problemStats = getEntityStats("problems");
-  const stepStats = getEntityStats("steps");
-  const remoteStats = getEntityStats("remotes");
-  const activeSessions = getActiveSessions();
+  // Fetch data using React Query hooks
+  const { data: devicesData } = useDevices(1, 100, { admin: true });
+  const { data: deviceStatsData } = useDeviceStats();
+  const { data: problemsData } = useProblems(1, 100);
+  const { data: problemStatsData } = useProblemStats();
+  const { data: stepsData } = useSteps(1, 100);
+  const { data: activeSessionsData } = useActiveSessions();
+  const { data: sessionStatsData } = useSessionStats();
 
-  // Recent activity
-  const recentChanges = changeLogs.slice(0, 10);
+  // Extract actual data
+  const devices = devicesData?.data || [];
+  const problems = problemsData?.data || [];
+  const steps = stepsData?.data || [];
+  const activeSessions = activeSessionsData?.data || [];
+
+  // Calculate statistics
+  const deviceStats = {
+    total: devices.length,
+    active: devices.filter((d) => d.is_active).length,
+  };
+
+  const problemStats = {
+    total: problems.length,
+    published: problems.filter((p) => p.status === "published").length,
+  };
+
+  const stepStats = {
+    total: steps.length,
+    active: steps.filter((s) => s.is_active).length,
+  };
+
+  const sessionStats = {
+    active: activeSessions.length,
+    total: sessionStatsData?.data?.totalSessions || 0,
+    successful: sessionStatsData?.data?.successfulSessions || 0,
+    failed: sessionStatsData?.data?.failedSessions || 0,
+  };
 
   // Performance metrics
   const totalProblems = problemStats.total;
-  const publishedProblems = problems.filter(
-    (p) => p.status === "published",
-  ).length;
+  const publishedProblems = problemStats.published;
   const completionRate =
     totalProblems > 0
       ? Math.round((publishedProblems / totalProblems) * 100)
@@ -75,26 +93,43 @@ const AdminDashboard = () => {
   const handleRefresh = async () => {
     setIsLoading(true);
     try {
-      await refreshData();
+      // Trigger a refetch of all queries by reloading the page or invalidating queries
+      window.location.reload();
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Removed seed data functionality - all data should come from database via API
+
   const handleExport = async () => {
     try {
-      const result = await exportData({
-        format: "json",
-        entities: ["devices", "problems", "steps", "remotes"],
-        includeMetadata: true,
-        includeMedia: false,
-      });
+      // Create export data
+      const exportData = {
+        devices,
+        problems,
+        steps,
+        activeSessions,
+        timestamp: new Date().toISOString(),
+        stats: {
+          deviceStats,
+          problemStats,
+          stepStats,
+          sessionStats,
+        },
+      };
 
       // Create download link
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+
       const link = document.createElement("a");
-      link.href = result.downloadUrl;
+      link.href = url;
       link.download = `ant-support-backup-${new Date().toISOString().split("T")[0]}.json`;
       link.click();
+
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Export failed:", error);
     }
@@ -134,7 +169,7 @@ const AdminDashboard = () => {
                 {selectedPeriod === "week"
                   ? "Неделя"
                   : selectedPeriod === "month"
-                    ? "Месяц"
+                    ? "Мес��ц"
                     : "Год"}
               </Button>
             </DropdownMenuTrigger>
@@ -161,13 +196,17 @@ const AdminDashboard = () => {
             <Monitor className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{deviceStats.active}</div>
+            <div className="text-2xl font-bold">{deviceStats.total}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">+{deviceStats.active}</span>{" "}
               активных
             </p>
             <Progress
-              value={(deviceStats.active / deviceStats.total) * 100}
+              value={
+                deviceStats.total > 0
+                  ? (deviceStats.active / deviceStats.total) * 100
+                  : 0
+              }
               className="mt-3"
             />
           </CardContent>
@@ -181,7 +220,7 @@ const AdminDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{problemStats.total}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">{publishedProblems}</span>{" "}
+              <span className="text-green-600">{problemStats.published}</span>{" "}
               опубликованы
             </p>
             <Progress value={completionRate} className="mt-3" />
@@ -199,7 +238,11 @@ const AdminDashboard = () => {
               <span className="text-blue-600">{stepStats.total}</span> всего
             </p>
             <Progress
-              value={(stepStats.active / stepStats.total) * 100}
+              value={
+                stepStats.total > 0
+                  ? (stepStats.active / stepStats.total) * 100
+                  : 0
+              }
               className="mt-3"
             />
           </CardContent>
@@ -213,7 +256,7 @@ const AdminDashboard = () => {
             <Activity className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeSessions.length}</div>
+            <div className="text-2xl font-bold">{sessionStats.active}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">+12%</span> за сегодня
             </p>
@@ -234,32 +277,39 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {devices.map((device) => {
-                const deviceProblems = problems.filter(
-                  (p) => p.deviceId === device.id,
-                );
-                const percentage =
-                  totalProblems > 0
-                    ? (deviceProblems.length / totalProblems) * 100
-                    : 0;
+              {devices.length > 0 ? (
+                devices.map((device) => {
+                  const deviceProblems = problems.filter(
+                    (p) => p.device_id === device.id,
+                  );
+                  const percentage =
+                    totalProblems > 0
+                      ? (deviceProblems.length / totalProblems) * 100
+                      : 0;
 
-                return (
-                  <div key={device.id} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <div
-                          className={`w-3 h-3 rounded bg-gradient-to-r ${device.color} mr-2`}
-                        />
-                        <span className="font-medium">{device.name}</span>
+                  return (
+                    <div key={device.id} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center">
+                          <div
+                            className={`w-3 h-3 rounded bg-gradient-to-r ${device.color || "from-blue-400 to-blue-600"} mr-2`}
+                          />
+                          <span className="font-medium">{device.name}</span>
+                        </div>
+                        <span className="text-gray-600">
+                          {deviceProblems.length} проблем
+                        </span>
                       </div>
-                      <span className="text-gray-600">
-                        {deviceProblems.length} проблем
-                      </span>
+                      <Progress value={percentage} className="h-2" />
                     </div>
-                    <Progress value={percentage} className="h-2" />
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Нет данных для отображения</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -332,52 +382,10 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentChanges.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Пока нет активности</p>
-                </div>
-              ) : (
-                recentChanges.map((change) => (
-                  <div
-                    key={change.id}
-                    className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
-                  >
-                    <div className="flex-shrink-0">
-                      {change.action === "create" && (
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <Plus className="h-4 w-4 text-green-600" />
-                        </div>
-                      )}
-                      {change.action === "update" && (
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Edit className="h-4 w-4 text-blue-600" />
-                        </div>
-                      )}
-                      {change.action === "delete" && (
-                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {change.action === "create" && "Создано"}
-                        {change.action === "update" && "Обновлено"}
-                        {change.action === "delete" && "Удалено"}{" "}
-                        {change.entityType === "device" && "устройство"}
-                        {change.entityType === "problem" && "проблема"}
-                        {change.entityType === "step" && "шаг"}
-                        {change.entityType === "remote" && "пульт"}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {change.userId} •{" "}
-                        {new Date(change.createdAt).toLocaleString("ru")}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+              <div className="text-center text-gray-500 py-8">
+                <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Пока нет активности</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -392,6 +400,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
+              {/* Removed seed data functionality - all data comes from database */}
               <Button className="w-full justify-start" variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Добавить устройство
@@ -443,6 +452,17 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Testing Panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CRUDTestPanel />
+        <ApiTestPanel />
+      </div>
+
+      {/* Device Update Test */}
+      <div className="mt-6">
+        <DeviceUpdateTest />
+      </div>
+
       {/* Recent Problems */}
       <Card>
         <CardHeader>
@@ -459,70 +479,79 @@ const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {problems.slice(0, 5).map((problem) => {
-              const device = devices.find((d) => d.id === problem.deviceId);
-              const problemSteps = steps.filter(
-                (s) => s.problemId === problem.id,
-              );
+            {problems.length > 0 ? (
+              problems.slice(0, 5).map((problem) => {
+                const device = devices.find((d) => d.id === problem.device_id);
+                const problemSteps = steps.filter(
+                  (s) => s.problem_id === problem.id,
+                );
 
-              return (
-                <div
-                  key={problem.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className={`w-10 h-10 bg-gradient-to-br ${problem.color} rounded-lg flex items-center justify-center`}
-                    >
-                      <AlertTriangle className="h-5 w-5 text-white" />
+                return (
+                  <div
+                    key={problem.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className={`w-10 h-10 bg-gradient-to-br ${problem.color || "from-orange-400 to-orange-600"} rounded-lg flex items-center justify-center`}
+                      >
+                        <AlertTriangle className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {problem.title}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {device?.name} • {problemSteps.length} шагов
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {problem.title}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {device?.name} • {problemSteps.length} шагов
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant={
+                          problem.status === "published"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className={
+                          problem.status === "published" ? "bg-green-600" : ""
+                        }
+                      >
+                        {problem.status === "published"
+                          ? "Опубликовано"
+                          : "Черновик"}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Просмотр
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Редактировать
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Удалить
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge
-                      variant={
-                        problem.status === "published" ? "default" : "secondary"
-                      }
-                      className={
-                        problem.status === "published" ? "bg-green-600" : ""
-                      }
-                    >
-                      {problem.status === "published"
-                        ? "Опубликовано"
-                        : "Черновик"}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Просмотр
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Редактировать
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Удалить
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Нет проблем для отображения</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

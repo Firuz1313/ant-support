@@ -2,7 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useData } from "@/contexts/DataContext";
+import { useDevices } from "@/hooks/useDevices";
+import { useProblems } from "@/hooks/useProblems";
 import {
   PlayCircle,
   Tv,
@@ -20,10 +21,23 @@ import {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { devices, problems, getEntityStats } = useData();
+  const { data: devicesData } = useDevices(1, 10);
+  const { data: problemsData } = useProblems(1, 10);
 
-  const deviceStats = getEntityStats("devices");
-  const problemStats = getEntityStats("problems");
+  const devices = devicesData?.data || [];
+  const problems = problemsData?.data || [];
+
+  // Calculate stats from actual data
+  const deviceStats = {
+    total: devices.length,
+    active: devices.filter((d) => d.isActive).length,
+    inactive: devices.filter((d) => !d.isActive).length,
+  };
+  const problemStats = {
+    total: problems.length,
+    active: problems.filter((p) => p.status === "published").length,
+    inactive: problems.filter((p) => p.status !== "published").length,
+  };
 
   const handleStartDiagnostic = () => {
     navigate("/devices");
@@ -205,8 +219,9 @@ const Index = () => {
                 Конструктор интерфейсов ТВ
               </h3>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                Создавайте и управляйте интерфейсами ТВ-приставок для точной диагностики.
-                Загружайте скриншоты, отмечайте интерактивные области и интегрируйте с процессом диагностики.
+                Создавайте и управляйте интерфейсами ТВ-приставок для точной
+                диагностики. Загружайте скриншоты, отмечайте интерактивные
+                области и интегрируйте с процессом диагностики.
               </p>
             </div>
 
@@ -219,7 +234,8 @@ const Index = () => {
                   Создание интерфейсов
                 </h4>
                 <p className="text-gray-300 text-sm">
-                  Загружайте скриншоты интерфейсов ваших ТВ-приставок и создавайте детальные представления
+                  Загружайте скриншоты интерфейсов ваших ТВ-приставок и
+                  создавайте детальные представления
                 </p>
               </div>
 
@@ -231,7 +247,8 @@ const Index = () => {
                   Интерактивные области
                 </h4>
                 <p className="text-gray-300 text-sm">
-                  Отмечайте кликабельные области и зоны подсветки для эффективной диагностики
+                  Отмечайте кликабельные области и зоны подсветки для
+                  эффективной диагностики
                 </p>
               </div>
 
@@ -240,10 +257,11 @@ const Index = () => {
                   <Eye className="h-8 w-8 text-white" />
                 </div>
                 <h4 className="text-lg font-semibold text-white mb-2">
-                  Интеграция в диагностику
+                  Интегр��ция в диагностику
                 </h4>
                 <p className="text-gray-300 text-sm">
-                  Созданные и��терфейсы автоматически отображаются в процессе диагностики
+                  Созданные и��терфейсы автоматически отображаются в процессе
+                  диагностики
                 </p>
               </div>
             </div>

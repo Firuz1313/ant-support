@@ -42,7 +42,7 @@ import {
   Copy,
   FolderOpen,
 } from "lucide-react";
-import ScreenshotBrowser from "@/components/admin/ScreenshotBrowser";
+// ScreenshotBrowser removed - functionality will be implemented via API
 import {
   Dialog,
   DialogContent,
@@ -91,7 +91,7 @@ const TVInterfaceBuilder = () => {
 
   // Image upload
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-  const [isScreenshotBrowserOpen, setIsScreenshotBrowserOpen] = useState(false);
+  // Screenshot browser functionality will be implemented via API
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load TV interfaces on component mount
@@ -235,7 +235,7 @@ const TVInterfaceBuilder = () => {
       console.error("Error creating TV interface:", error);
       toast({
         title: "Ошибка",
-        description: "Произошла ошибка при создании TV интерфейса",
+        description: "Произошл�� ошибка при создании TV интерфейса",
         variant: "destructive",
       });
     } finally {
@@ -601,7 +601,11 @@ const TVInterfaceBuilder = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setIsScreenshotBrowserOpen(true)}
+                        onClick={() =>
+                          alert(
+                            "Screenshot browser will be implemented via API",
+                          )
+                        }
                       >
                         <FolderOpen className="h-4 w-4 mr-2" />
                         Из библиотеки
@@ -948,7 +952,7 @@ const TVInterfaceBuilder = () => {
             </div>
 
             <div>
-              <Label htmlFor="edit-description">Описание</Label>
+              <Label htmlFor="edit-description">Описа��ие</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description || ""}
@@ -978,7 +982,9 @@ const TVInterfaceBuilder = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsScreenshotBrowserOpen(true)}
+                    onClick={() =>
+                      alert("Screenshot browser will be implemented via API")
+                    }
                   >
                     <FolderOpen className="h-4 w-4 mr-2" />
                     Из библиотеки
@@ -1026,13 +1032,7 @@ const TVInterfaceBuilder = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Screenshot Browser */}
-      <ScreenshotBrowser
-        open={isScreenshotBrowserOpen}
-        onOpenChange={setIsScreenshotBrowserOpen}
-        onSelectScreenshot={handleScreenshotSelect}
-        currentDeviceId={formData.deviceId}
-      />
+      {/* Screenshot Browser functionality will be implemented via API */}
     </div>
   );
 };
