@@ -38,10 +38,12 @@ const iconMap = {
 const ProblemsPage = () => {
   const navigate = useNavigate();
   const { deviceId } = useParams<{ deviceId: string }>();
-  const { getDeviceById, getProblemsForDevice } = useData();
 
-  const device = deviceId ? getDeviceById(deviceId) : null;
-  const problems = deviceId ? getProblemsForDevice(deviceId) : [];
+  const { data: deviceData } = useDevice(deviceId || '', true);
+  const { data: problemsData } = useProblemsByDevice(deviceId || '', 'published');
+
+  const device = deviceData?.data;
+  const problems = problemsData?.data || [];
 
   const handleProblemSelect = (problemId: string) => {
     navigate(`/diagnostic/${deviceId}/${problemId}`);
