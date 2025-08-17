@@ -7,6 +7,7 @@ import { useDevices, useDeviceStats } from "@/hooks/useDevices";
 import { useProblems, useProblemStats } from "@/hooks/useProblems";
 import { useSteps } from "@/hooks/useSteps";
 import { useActiveSessions, useSessionStats } from "@/hooks/useSessions";
+import CRUDTestPanel from "@/components/admin/CRUDTestPanel";
 import {
   BarChart3,
   TrendingUp,
@@ -218,7 +219,7 @@ const AdminDashboard = () => {
             Панель управления
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Общий обзор сис��емы диагностики ТВ-приставок
+            Общий обзор системы диагностики ТВ-приставок
           </p>
         </div>
         <div className="flex space-x-2">
@@ -518,6 +519,9 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* CRUD Testing Panel */}
+      <CRUDTestPanel />
 
       {/* Recent Problems */}
       <Card>
