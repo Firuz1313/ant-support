@@ -117,22 +117,6 @@ CREATE TABLE IF NOT EXISTS diagnostic_steps (
     UNIQUE(problem_id, step_number)
 );
 
--- TV interfaces table - screenshots and interface layouts
-CREATE TABLE IF NOT EXISTS tv_interfaces (
-    id VARCHAR(255) PRIMARY KEY,
-    device_id VARCHAR(255) REFERENCES devices(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    type VARCHAR(100) DEFAULT 'home' CHECK (type IN ('home', 'settings', 'guide', 'custom')),
-    screenshot_url TEXT,
-    screenshot_data TEXT, -- Base64 encoded image data
-    clickable_areas JSONB DEFAULT '[]', -- Array of clickable areas
-    highlight_areas JSONB DEFAULT '[]', -- Array of highlight areas
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    deleted_at TIMESTAMP WITH TIME ZONE
-);
 
 -- TV interface marks/annotations
 CREATE TABLE IF NOT EXISTS tv_interface_marks (
