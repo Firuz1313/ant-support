@@ -1,5 +1,6 @@
 import Problem from '../models/Problem.js';
 import Device from '../models/Device.js';
+import populateTestData from '../utils/populateTestData.js';
 
 const problemModel = new Problem();
 const deviceModel = new Device();
@@ -49,6 +50,31 @@ export const testCreateProblem = async (req, res) => {
   }
 };
 
+/**
+ * Заполнить базу тестовыми данными
+ */
+export const populateData = async (req, res) => {
+  try {
+    console.log('🌱 Starting test data population...');
+
+    const result = await populateTestData();
+
+    res.json({
+      success: true,
+      message: 'Test data populated successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('❌ Population error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to populate test data',
+      error: error.message
+    });
+  }
+};
+
 export default {
-  testCreateProblem
+  testCreateProblem,
+  populateData
 };
