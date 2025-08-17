@@ -42,7 +42,7 @@ class DeviceController {
         // Для админ панели - расширенная информация
         devices = await deviceModel.getForAdmin(filters, options);
       } else if (include_stats === 'true') {
-        // С статистикой
+        // С статис��икой
         devices = await deviceModel.findAllWithStats(filters, options);
       } else {
         // Обычный список
@@ -169,7 +169,7 @@ class DeviceController {
           is_active: true
         });
 
-        if (duplicateDevice && duplicateDevice.id !== id) {
+        if (duplicateDevice && String(duplicateDevice.id) !== String(id)) {
           return res.status(409).json({
             success: false,
             error: 'Устройство с таким названием уже существует',
@@ -358,7 +358,7 @@ class DeviceController {
   }
 
   /**
-   * Получение статистики устройств
+   * По��учение статистики устройств
    * GET /api/v1/devices/stats
    */
   async getDeviceStats(req, res, next) {
