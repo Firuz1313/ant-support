@@ -10,6 +10,23 @@ class DiagnosticStep extends BaseModel {
   }
 
   /**
+   * Подготовка данных для вставки (переопределяем для SERIAL ID)
+   */
+  prepareForInsert(data) {
+    const prepared = {
+      ...data,
+      created_at: this.createTimestamp(),
+      updated_at: this.createTimestamp(),
+      is_active: data.is_active !== undefined ? data.is_active : true
+    };
+
+    // Всегда удаляем ID для шагов - используется SERIAL auto-increment
+    delete prepared.id;
+
+    return prepared;
+  }
+
+  /**
    * Получение шагов по проблеме с сортировкой по номеру шага
    */
   async findByProblem(problemId, options = {}) {
@@ -395,7 +412,7 @@ class DiagnosticStep extends BaseModel {
 
       return { canDelete: true };
     } catch (error) {
-      console.error('Ошибка проверки возможности удаления шага:', error.message);
+      console.error('Оши��ка проверки возможности удаления шага:', error.message);
       throw error;
     }
   }
