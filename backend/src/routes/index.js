@@ -8,6 +8,7 @@ import tvInterfaceMarkRoutes from "./tvInterfaceMarkRoutes.js";
 import cleanupRoutes from "./cleanupRoutes.js";
 import seedRoutes from "./seedRoutes.js";
 import testDataRoutes from "./testDataRoutes.js";
+import testRoutes from "./testRoutes.js";
 
 const router = express.Router();
 
@@ -70,7 +71,7 @@ router.get("/docs", (req, res) => {
     data: {
       title: "ANT Support API Documentation",
       version: "1.0.0",
-      description: "REST API для системы диагностики ТВ приставо�� ANT",
+      description: "REST API для системы диагностики ТВ приставок ANT",
       baseUrl: "/api/v1",
       endpoints: {
         devices: {
@@ -219,6 +220,7 @@ router.use(`${API_V1_PREFIX}/tv-interface-marks`, tvInterfaceMarkRoutes);
 router.use(`${API_V1_PREFIX}/cleanup`, cleanupRoutes);
 router.use(`${API_V1_PREFIX}/seed`, seedRoutes);
 router.use(`${API_V1_PREFIX}/test-data`, testDataRoutes);
+router.use(`${API_V1_PREFIX}/test`, testRoutes);
 
 // Обработчик для несуществующих эндпоинтов API
 router.use("*", (req, res) => {
