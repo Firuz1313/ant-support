@@ -146,6 +146,30 @@ const AdminDashboard = () => {
           } else {
             const errorData = await response.json();
             console.log(`Failed to create problem: ${problem.title}`, errorData);
+
+            // If validation error, try with a string ID
+            if (errorData.errorType === 'VALIDATION_ERROR' && errorData.details?.some(d => d.field === 'id')) {
+              try {
+                const problemWithId = { ...problem, id: `problem_${Date.now()}_${Math.random().toString(36).substr(2)}` };
+                const retryResponse = await fetch('/api/v1/problems', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(problemWithId)
+                });
+
+                if (retryResponse.ok) {
+                  successCount++;
+                  console.log(`Created problem with ID: ${problem.title}`);
+                } else {
+                  const retryError = await retryResponse.json();
+                  console.log(`Retry failed for problem: ${problem.title}`, retryError);
+                }
+              } catch (retryError) {
+                console.log(`Retry error for problem: ${problem.title}`, retryError);
+              }
+            }
           }
         } catch (error) {
           console.log(`Error creating problem: ${problem.title}`, error);
