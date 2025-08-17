@@ -329,3 +329,6 @@ export const handleApiError = (error: unknown): string => {
 console.log("✅ API Client initialized");
 
 export default apiClient;
+
+// Export types for re-export in index
+export type { ApiClientConfig, RequestOptions };
