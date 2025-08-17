@@ -67,12 +67,8 @@ pool.on("release", (client) => {
   }
 });
 
-// Import mock database if needed
-let mockDb = null;
-if (USE_MOCK_DB) {
-  mockDb = await import("./mockDatabase.js");
-  console.log("🔧 Using mock database for development");
-}
+// Always use real PostgreSQL database
+console.log("🔗 Using PostgreSQL database");
 
 // Функция проверки подключения к базе данных
 export async function testConnection() {
@@ -87,7 +83,7 @@ export async function testConnection() {
       "SELECT NOW() as current_time, version() as postgres_version",
     );
 
-    console.log("✅ Подключение к PostgreSQL успешно");
+    console.log("✅ Подключение к PostgreSQL ус��ешно");
     console.log(`🕐 Время сервера: ${result.rows[0].current_time}`);
     console.log(
       `📋 Версия PostgreSQL: ${result.rows[0].postgres_version.split(" ")[0]}`,
@@ -301,7 +297,7 @@ export async function runMigrations() {
       console.log(`✅ Миграция ${filename} выполнена успешно`);
     }
 
-    console.log("🎉 Все ��играции выполнены успешно");
+    console.log("🎉 Все миграции выполнены успешно");
   } catch (error) {
     console.error("❌ Ошибка выполнения миграций:", error.message);
     throw error;
@@ -390,7 +386,7 @@ export async function cleanupOldData(daysToKeep = 90) {
       deletedLogs: logsResult.rowCount,
     };
   } catch (error) {
-    console.error("�� Ошибка очистки данных:", error.message);
+    console.error("❌ Ошибка очистки данных:", error.message);
     throw error;
   }
 }
