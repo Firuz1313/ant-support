@@ -129,30 +129,59 @@ export class ApiClient {
       let responseText = "";
       let bodyConsumed = false;
 
-      // Safely read response body with proper checks
+      // Ultra-safe response body reading with multiple fallbacks
+      console.log(`📡 Starting response body reading...`);
+      console.log(`📡 Response status: ${response.status}`);
+      console.log(`📡 Response ok: ${response.ok}`);
+      console.log(`📡 Response type: ${response.type}`);
+      console.log(`📡 Response redirected: ${response.redirected}`);
+
       try {
         const contentType = response.headers.get('content-type') || '';
         const contentLength = response.headers.get('content-length');
 
         console.log(`📡 Response headers - Content-Type: ${contentType}, Content-Length: ${contentLength}`);
-        console.log(`📡 Response body used: ${response.bodyUsed}`);
+        console.log(`📡 Response body used BEFORE reading: ${response.bodyUsed}`);
 
-        // Check if body was already consumed
+        // Multiple safety checks before attempting to read
         if (response.bodyUsed) {
-          console.warn(`📡 Response body already consumed`);
+          console.warn(`📡 Response body already consumed - skipping read`);
+          responseText = "";
+          bodyConsumed = true;
+        } else if (response.body === null) {
+          console.warn(`📡 Response body is null - no content to read`);
           responseText = "";
           bodyConsumed = true;
         } else {
-          // Try to read the response body once
-          responseText = await response.text();
-          bodyConsumed = true;
-          console.log(
-            `📡 Response text (${responseText.length} chars): ${responseText.substring(0, 200)}`,
-          );
+          console.log(`📡 Attempting to read response body...`);
+          try {
+            // Create a clone first to avoid consuming the original
+            const responseClone = response.clone();
+            responseText = await responseClone.text();
+            bodyConsumed = true;
+            console.log(
+              `📡 Successfully read response text (${responseText.length} chars): ${responseText.substring(0, 200)}`,
+            );
+          } catch (cloneError) {
+            console.warn(`📡 Clone failed, trying direct read:`, cloneError);
+            // Fallback to direct read if clone fails
+            responseText = await response.text();
+            bodyConsumed = true;
+            console.log(
+              `📡 Direct read successful (${responseText.length} chars): ${responseText.substring(0, 200)}`,
+            );
+          }
         }
+
+        console.log(`📡 Response body used AFTER reading: ${response.bodyUsed}`);
       } catch (textError) {
         console.error(`📡 Failed to read response text:`, textError);
-        // If reading fails, it's likely already consumed or there's a network issue
+        console.error(`📡 Error details:`, {
+          name: textError.name,
+          message: textError.message,
+          stack: textError.stack
+        });
+        // If reading fails, create safe fallback
         responseText = "";
         bodyConsumed = true;
       }
