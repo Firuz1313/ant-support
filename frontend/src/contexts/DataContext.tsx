@@ -25,6 +25,7 @@ interface DataContextType {
   createStep: (data: any) => Promise<any>;
   updateStep: (id: string, data: any) => Promise<any>;
   deleteStep: (id: string) => Promise<void>;
+  reorderSteps: (problemId: string, stepIds: string[]) => Promise<void>;
 
   // Remotes
   remotes: any[];
