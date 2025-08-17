@@ -10,6 +10,26 @@ class Problem extends BaseModel {
   }
 
   /**
+   * Подготовка данных для вставки (переопределяем для SERIAL ID)
+   */
+  prepareForInsert(data) {
+    const prepared = {
+      ...data,
+      // Не генерируем ID для проблем - используем SERIAL
+      created_at: this.createTimestamp(),
+      updated_at: this.createTimestamp(),
+      is_active: data.is_active !== undefined ? data.is_active : true
+    };
+
+    // Удаляем ID если он был передан как пустой или null
+    if (!prepared.id) {
+      delete prepared.id;
+    }
+
+    return prepared;
+  }
+
+  /**
    * Получение проблем с информацией об устройстве и количестве шагов
    */
   async findAllWithDetails(filters = {}, options = {}) {
@@ -142,7 +162,7 @@ class Problem extends BaseModel {
   }
 
   /**
-   * Получение проблем по устройству
+   * Получен��е проблем по устройству
    */
   async findByDevice(deviceId, options = {}) {
     try {
