@@ -163,7 +163,7 @@ export class ApiClient {
               `📡 Successfully read response text (${responseText.length} chars): ${responseText.substring(0, 200)}`,
             );
           } catch (cloneError) {
-            console.warn(`📡 Clone failed, trying direct read:`, cloneError);
+            console.warn(`�� Clone failed, trying direct read:`, cloneError);
             // Fallback to direct read if clone fails
             responseText = await response.text();
             bodyConsumed = true;
@@ -240,10 +240,19 @@ export class ApiClient {
 
         // Special handling for different error types
         if (response.status === 409) {
-          console.error(`📡 Conflict Error 409: ${errorMessage}`);
-          console.error(`📡 Full Conflict Response:`, JSON.stringify(responseData, null, 2));
+          console.error(`📡 ===== 409 CONFLICT ERROR DETAILS =====`);
+          console.error(`📡 Request URL: ${url}`);
+          console.error(`📡 Request Method: ${fetchOptions.method || 'GET'}`);
+          console.error(`📡 Request Body:`, fetchOptions.body || 'No body');
+          console.error(`📡 Response Status: ${response.status}`);
+          console.error(`📡 Response Headers:`, Object.fromEntries(response.headers.entries()));
+          console.error(`📡 Response Text Length: ${responseText.length}`);
+          console.error(`📡 Response Text: "${responseText}"`);
+          console.error(`📡 Parsed Response Data:`, JSON.stringify(responseData, null, 2));
+          console.error(`📡 Error Message: ${errorMessage}`);
           console.error(`📡 Error Type:`, responseData?.errorType || 'CONFLICT');
           console.error(`📡 Suggestion:`, responseData?.suggestion || 'Check for duplicate data or constraint violations');
+          console.error(`📡 ======================================`);
 
           // Add context-specific conflict handling
           if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
@@ -254,6 +263,14 @@ export class ApiClient {
           if (!responseData.errorType) {
             responseData.errorType = 'CONFLICT';
           }
+
+          // Add request context to error for better debugging
+          responseData.requestContext = {
+            url: url,
+            method: fetchOptions.method || 'GET',
+            body: fetchOptions.body,
+            timestamp: new Date().toISOString()
+          };
         } else if (response.status >= 400) {
           console.error(`📡 HTTP Error ${response.status}: ${errorMessage}`);
           console.error(`📡 Full Error Response:`, JSON.stringify(responseData, null, 2));
