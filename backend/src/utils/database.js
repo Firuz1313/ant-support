@@ -23,7 +23,7 @@ const dbConfig = process.env.DATABASE_URL ? {
 
   // Настройки pool соединений
   max: 20, // максимальное количество соединений в pool
-  min: 2, // минимальное количество соединений
+  min: 2, // мин��мальное количество соединений
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
   connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
   maxUses: 7500, // максимальное количество использований соединения
@@ -140,10 +140,6 @@ export async function query(text, params = []) {
 
 // Функция выполнения транзакции
 export async function transaction(callback) {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.transaction(callback);
-  }
-
   let client;
 
   try {
@@ -236,7 +232,7 @@ export async function runMigrations() {
       executedResult.rows.map((row) => row.filename),
     );
 
-    // Читаем файлы миг��аций
+    // Читаем файлы миграций
     const migrationsDir = path.join(__dirname, "../../migrations");
     const migrationFiles = fs
       .readdirSync(migrationsDir)
