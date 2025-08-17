@@ -508,7 +508,7 @@ const validateDeviceUpdate = validateRequest(deviceValidation.update);
 export const getDevices = deviceController.getDevices.bind(deviceController);
 export const getDeviceById = deviceController.getDeviceById.bind(deviceController);
 export const createDevice = [validateDeviceCreation, deviceController.createDevice.bind(deviceController)];
-export { createDeviceNew };
+export const createDeviceNewWithValidation = [validateDeviceCreationNew, createDeviceNew];
 export const updateDevice = [validateDeviceUpdate, deviceController.updateDevice.bind(deviceController)];
 export const deleteDevice = deviceController.deleteDevice.bind(deviceController);
 export const restoreDevice = deviceController.restoreDevice.bind(deviceController);
