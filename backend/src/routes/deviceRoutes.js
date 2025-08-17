@@ -3,6 +3,7 @@ import {
   getDevices,
   getDeviceById,
   createDevice,
+  createDeviceNew,
   updateDevice,
   deleteDevice,
   restoreDevice,
