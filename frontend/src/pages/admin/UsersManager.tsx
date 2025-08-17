@@ -215,7 +215,7 @@ const UsersManager = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Добавить нового пользователя</DialogTitle>
+              <DialogTitle>Добавить новог�� пользователя</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -433,7 +433,7 @@ const UsersManager = () => {
                       Редактировать
                     </DropdownMenuItem>
                     {user.id !== "1" && (
-                      <DropdownMenuItem onClick={() => handleToggleStatus(user.id)}>
+                      <DropdownMenuItem onClick={() => handleToggleStatus(user.id)} disabled={isLoading}>
                         {user.status === "active" ? (
                           <>
                             <UserX className="h-4 w-4 mr-2" />
@@ -448,9 +448,10 @@ const UsersManager = () => {
                       </DropdownMenuItem>
                     )}
                     {user.id !== "1" && (
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => handleDelete(user.id)}
                         className="text-red-600"
+                        disabled={isLoading}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Удалить
