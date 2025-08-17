@@ -91,7 +91,7 @@ class ProblemController {
       if (!problem) {
         return res.status(404).json({
           success: false,
-          error: 'Проблема не найдена',
+          error: 'Проблема не на��дена',
           errorType: 'NOT_FOUND',
           timestamp: new Date().toISOString()
         });
@@ -150,6 +150,12 @@ class ProblemController {
             timestamp: new Date().toISOString()
           });
         }
+      }
+
+      // Remove temporary ID before database insertion
+      if (tempId && problemData.id === tempId) {
+        const { id, ...dataWithoutId } = problemData;
+        problemData = dataWithoutId;
       }
 
       const newProblem = await problemModel.create(problemData);
@@ -475,7 +481,7 @@ class ProblemController {
       res.status(201).json({
         success: true,
         data: duplicatedProblem,
-        message: 'Проблема успешно продублирована',
+        message: 'Проблема успешно продублирова��а',
         timestamp: new Date().toISOString()
       });
     } catch (error) {
