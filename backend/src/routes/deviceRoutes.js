@@ -84,7 +84,7 @@ router.get("/:id", getDeviceById);
  * @body {string} device.name - Название устройства
  * @body {string} device.brand - Бренд устройства
  * @body {string} device.model - Модель устройства
- * @body {string} [device.description] - Описание
+ * @body {string} [device.description] - Описани��
  * @body {string} [device.image_url] - URL изображения
  * @body {string} [device.logo_url] - URL логотипа
  * @body {string} [device.color] - Цветовая схема
@@ -92,7 +92,7 @@ router.get("/:id", getDeviceById);
  * @body {string} [device.status] - Статус устройства
  * @body {object} [device.metadata] - Дополнительные данные
  */
-router.post("/", createDeviceNew);
+router.post("/", createDeviceNewWithValidation);
 
 /**
  * @route PUT /api/v1/devices/reorder
