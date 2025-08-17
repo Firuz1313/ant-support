@@ -40,7 +40,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useDevices, useCreateDevice, useUpdateDevice, useDeleteDevice } from "@/hooks/useDevices";
+import {
+  useDevices,
+  useCreateDevice,
+  useUpdateDevice,
+  useDeleteDevice,
+} from "@/hooks/useDevices";
 
 interface Device {
   id: string;
@@ -171,21 +176,27 @@ const DeviceManager = () => {
     };
 
     const changedData: any = {};
-    Object.keys(formData).forEach(key => {
-      if (formData[key as keyof typeof formData] !== originalData[key as keyof typeof originalData]) {
+    Object.keys(formData).forEach((key) => {
+      if (
+        formData[key as keyof typeof formData] !==
+        originalData[key as keyof typeof originalData]
+      ) {
         changedData[key] = formData[key as keyof typeof formData];
       }
     });
 
     // Check for duplicate names before sending request
     if (changedData.name) {
-      const duplicateDevice = devices.find(d =>
-        d.name.toLowerCase() === changedData.name.toLowerCase() &&
-        String(d.id) !== String(selectedDevice.id)
+      const duplicateDevice = devices.find(
+        (d) =>
+          d.name.toLowerCase() === changedData.name.toLowerCase() &&
+          String(d.id) !== String(selectedDevice.id),
       );
 
       if (duplicateDevice) {
-        alert(`Конфликт: Устройство с названием "${changedData.name}" уже с��ществует.\n\nПопробу��те использовать другое название.`);
+        alert(
+          `Конфликт: Устройство с названием "${changedData.name}" уже с��ществует.\n\nПопробу��те использовать другое название.`,
+        );
         return;
       }
     }
@@ -204,7 +215,7 @@ const DeviceManager = () => {
     try {
       await updateDeviceMutation.mutateAsync({
         id: selectedDevice.id,
-        data: changedData
+        data: changedData,
       });
       setIsEditDialogOpen(false);
       setSelectedDevice(null);
@@ -214,27 +225,33 @@ const DeviceManager = () => {
 
       // Show detailed user-friendly error messages
       if (error?.status === 409) {
-        const errorMsg = error?.response?.error || error?.message || 'Конфликт данных';
-        const suggestion = error?.response?.suggestion || 'Попробуйте использовать другое название';
+        const errorMsg =
+          error?.response?.error || error?.message || "Конфликт данных";
+        const suggestion =
+          error?.response?.suggestion ||
+          "Попробуйте использовать другое название";
         alert(`Конфликт: ${errorMsg}\n\nРекомендация: ${suggestion}`);
       } else if (error?.status === 400) {
         const details = error?.response?.details || [];
-        const detailsText = details.length > 0
-          ? details.map((d: any) => `${d.field}: ${d.message}`).join('\n')
-          : 'Проверьте правильность введенных данных';
+        const detailsText =
+          details.length > 0
+            ? details.map((d: any) => `${d.field}: ${d.message}`).join("\n")
+            : "Проверьте правильность введенных данных";
         alert(`Ошибка валидации:\n${detailsText}`);
       } else if (error?.status === 0) {
         alert("Ошибка соединения: Проверьте подключение к серверу.");
       } else {
-        const errorMsg = error?.response?.error || error?.message || 'Неизвестная ошибка';
+        const errorMsg =
+          error?.response?.error || error?.message || "Неизвестная ошибка";
         alert(`Произошла ошибка при обновлении устройства:\n${errorMsg}`);
       }
     }
   };
 
   const handleDelete = async (deviceId: string) => {
-    const device = devices.find(d => d.id === deviceId);
-    const problemsCount = device?.problems_count || device?.published_problems_count || 0;
+    const device = devices.find((d) => d.id === deviceId);
+    const problemsCount =
+      device?.problems_count || device?.published_problems_count || 0;
     if (problemsCount > 0) {
       alert(
         `Нельзя удалить приставку с ${problemsCount} активными проблемами. Сначала удалите или переместите проблемы.`,
@@ -458,7 +475,8 @@ const DeviceManager = () => {
       {/* Devices Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredDevices.map((device) => {
-          const problemsCount = device.problems_count || device.published_problems_count || 0;
+          const problemsCount =
+            device.problems_count || device.published_problems_count || 0;
 
           return (
             <Card

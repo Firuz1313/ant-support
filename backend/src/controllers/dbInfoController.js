@@ -1,9 +1,9 @@
-import { query } from '../utils/database.js';
+import { query } from "../utils/database.js";
 
 export const getDatabaseInfo = async (req, res) => {
   try {
-    console.log('🔍 Getting database structure info...');
-    
+    console.log("🔍 Getting database structure info...");
+
     // Get all tables
     const tablesResult = await query(`
       SELECT table_name 
@@ -12,7 +12,7 @@ export const getDatabaseInfo = async (req, res) => {
       AND table_type = 'BASE TABLE'
       ORDER BY table_name
     `);
-    
+
     // Get foreign keys
     const fksResult = await query(`
       SELECT 
@@ -32,39 +32,49 @@ export const getDatabaseInfo = async (req, res) => {
       WHERE tc.constraint_type = 'FOREIGN KEY' 
       ORDER BY tc.table_name, kcu.column_name
     `);
-    
+
     // Get row counts for main tables
-    const tablesToCheck = ['devices', 'problems', 'diagnostic_steps', 'diagnostic_sessions', 'tv_interfaces', 'tv_interface_marks'];
+    const tablesToCheck = [
+      "devices",
+      "problems",
+      "diagnostic_steps",
+      "diagnostic_sessions",
+      "tv_interfaces",
+      "tv_interface_marks",
+    ];
     const rowCounts = {};
-    
+
     for (const tableName of tablesToCheck) {
       try {
-        const result = await query(`SELECT COUNT(*) as count FROM ${tableName}`);
+        const result = await query(
+          `SELECT COUNT(*) as count FROM ${tableName}`,
+        );
         rowCounts[tableName] = parseInt(result.rows[0].count);
       } catch (error) {
-        rowCounts[tableName] = 'N/A';
+        rowCounts[tableName] = "N/A";
       }
     }
-    
+
     res.json({
       success: true,
       data: {
-        tables: tablesResult.rows.map(r => r.table_name),
+        tables: tablesResult.rows.map((r) => r.table_name),
         foreignKeys: fksResult.rows,
         rowCounts: rowCounts,
-        isEmpty: Object.values(rowCounts).every(count => count === 0 || count === 'N/A')
+        isEmpty: Object.values(rowCounts).every(
+          (count) => count === 0 || count === "N/A",
+        ),
       },
-      message: 'Database structure information retrieved successfully',
-      timestamp: new Date().toISOString()
+      message: "Database structure information retrieved successfully",
+      timestamp: new Date().toISOString(),
     });
-    
   } catch (error) {
-    console.error('❌ Error getting database info:', error);
+    console.error("❌ Error getting database info:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to retrieve database information',
+      error: "Failed to retrieve database information",
       message: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 };

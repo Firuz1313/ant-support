@@ -62,17 +62,17 @@ const AdminDashboard = () => {
   // Calculate statistics
   const deviceStats = {
     total: devices.length,
-    active: devices.filter(d => d.is_active).length,
+    active: devices.filter((d) => d.is_active).length,
   };
 
   const problemStats = {
     total: problems.length,
-    published: problems.filter(p => p.status === 'published').length,
+    published: problems.filter((p) => p.status === "published").length,
   };
 
   const stepStats = {
     total: steps.length,
-    active: steps.filter(s => s.is_active).length,
+    active: steps.filter((s) => s.is_active).length,
   };
 
   const sessionStats = {
@@ -85,7 +85,10 @@ const AdminDashboard = () => {
   // Performance metrics
   const totalProblems = problemStats.total;
   const publishedProblems = problemStats.published;
-  const completionRate = totalProblems > 0 ? Math.round((publishedProblems / totalProblems) * 100) : 0;
+  const completionRate =
+    totalProblems > 0
+      ? Math.round((publishedProblems / totalProblems) * 100)
+      : 0;
 
   const handleRefresh = async () => {
     setIsLoading(true);
@@ -113,7 +116,7 @@ const AdminDashboard = () => {
           problemStats,
           stepStats,
           sessionStats,
-        }
+        },
       };
 
       // Create download link
@@ -199,7 +202,11 @@ const AdminDashboard = () => {
               активных
             </p>
             <Progress
-              value={deviceStats.total > 0 ? (deviceStats.active / deviceStats.total) * 100 : 0}
+              value={
+                deviceStats.total > 0
+                  ? (deviceStats.active / deviceStats.total) * 100
+                  : 0
+              }
               className="mt-3"
             />
           </CardContent>
@@ -231,7 +238,11 @@ const AdminDashboard = () => {
               <span className="text-blue-600">{stepStats.total}</span> всего
             </p>
             <Progress
-              value={stepStats.total > 0 ? (stepStats.active / stepStats.total) * 100 : 0}
+              value={
+                stepStats.total > 0
+                  ? (stepStats.active / stepStats.total) * 100
+                  : 0
+              }
               className="mt-3"
             />
           </CardContent>
@@ -266,27 +277,34 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {devices.length > 0 ? devices.map((device) => {
-                const deviceProblems = problems.filter((p) => p.device_id === device.id);
-                const percentage = totalProblems > 0 ? (deviceProblems.length / totalProblems) * 100 : 0;
+              {devices.length > 0 ? (
+                devices.map((device) => {
+                  const deviceProblems = problems.filter(
+                    (p) => p.device_id === device.id,
+                  );
+                  const percentage =
+                    totalProblems > 0
+                      ? (deviceProblems.length / totalProblems) * 100
+                      : 0;
 
-                return (
-                  <div key={device.id} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <div
-                          className={`w-3 h-3 rounded bg-gradient-to-r ${device.color || 'from-blue-400 to-blue-600'} mr-2`}
-                        />
-                        <span className="font-medium">{device.name}</span>
+                  return (
+                    <div key={device.id} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center">
+                          <div
+                            className={`w-3 h-3 rounded bg-gradient-to-r ${device.color || "from-blue-400 to-blue-600"} mr-2`}
+                          />
+                          <span className="font-medium">{device.name}</span>
+                        </div>
+                        <span className="text-gray-600">
+                          {deviceProblems.length} проблем
+                        </span>
                       </div>
-                      <span className="text-gray-600">
-                        {deviceProblems.length} проблем
-                      </span>
+                      <Progress value={percentage} className="h-2" />
                     </div>
-                    <Progress value={percentage} className="h-2" />
-                  </div>
-                );
-              }) : (
+                  );
+                })
+              ) : (
                 <div className="text-center text-gray-500 py-8">
                   <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Нет данных для отображения</p>
@@ -461,68 +479,74 @@ const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {problems.length > 0 ? problems.slice(0, 5).map((problem) => {
-              const device = devices.find((d) => d.id === problem.device_id);
-              const problemSteps = steps.filter((s) => s.problem_id === problem.id);
+            {problems.length > 0 ? (
+              problems.slice(0, 5).map((problem) => {
+                const device = devices.find((d) => d.id === problem.device_id);
+                const problemSteps = steps.filter(
+                  (s) => s.problem_id === problem.id,
+                );
 
-              return (
-                <div
-                  key={problem.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className={`w-10 h-10 bg-gradient-to-br ${problem.color || 'from-orange-400 to-orange-600'} rounded-lg flex items-center justify-center`}
-                    >
-                      <AlertTriangle className="h-5 w-5 text-white" />
+                return (
+                  <div
+                    key={problem.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className={`w-10 h-10 bg-gradient-to-br ${problem.color || "from-orange-400 to-orange-600"} rounded-lg flex items-center justify-center`}
+                      >
+                        <AlertTriangle className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {problem.title}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {device?.name} • {problemSteps.length} шагов
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {problem.title}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {device?.name} • {problemSteps.length} шагов
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant={
+                          problem.status === "published"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className={
+                          problem.status === "published" ? "bg-green-600" : ""
+                        }
+                      >
+                        {problem.status === "published"
+                          ? "Опубликовано"
+                          : "Черновик"}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Просмотр
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Редактировать
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-red-600">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Удалить
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge
-                      variant={
-                        problem.status === "published" ? "default" : "secondary"
-                      }
-                      className={
-                        problem.status === "published" ? "bg-green-600" : ""
-                      }
-                    >
-                      {problem.status === "published"
-                        ? "Опубликовано"
-                        : "Черновик"}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Просмотр
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Редактировать
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Удалить
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              );
-            }) : (
+                );
+              })
+            ) : (
               <div className="text-center text-gray-500 py-8">
                 <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Нет проблем для отображения</p>

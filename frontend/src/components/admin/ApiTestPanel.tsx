@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { apiClient } from '@/api/client';
+import { apiClient } from "@/api/client";
 import { AlertCircle, CheckCircle, Bug } from "lucide-react";
 
 const ApiTestPanel: React.FC = () => {
   const [testResults, setTestResults] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const addResult = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  const addResult = (
+    message: string,
+    type: "success" | "error" | "info" = "info",
+  ) => {
+    const emoji = type === "success" ? "✅" : type === "error" ? "❌" : "ℹ️";
     const timestamp = new Date().toLocaleTimeString();
-    setTestResults(prev => [...prev, `${timestamp} ${emoji} ${message}`]);
+    setTestResults((prev) => [...prev, `${timestamp} ${emoji} ${message}`]);
   };
 
   const testResponseBodyReading = async () => {
@@ -21,17 +24,29 @@ const ApiTestPanel: React.FC = () => {
 
     try {
       // Test multiple rapid requests to check for "body already read" errors
-      const promises = Array.from({ length: 3 }, (_, i) => 
-        apiClient.get('/v1/devices', { params: { page: 1, limit: 1 } })
+      const promises = Array.from({ length: 3 }, (_, i) =>
+        apiClient.get("/v1/devices", { params: { page: 1, limit: 1 } }),
       );
 
       await Promise.all(promises);
-      addResult("Response body reading test passed - no 'body already read' errors", 'success');
+      addResult(
+        "Response body reading test passed - no 'body already read' errors",
+        "success",
+      );
     } catch (error: any) {
-      if (error.message.includes('body stream') || error.message.includes('already read')) {
-        addResult(`Response body reading test failed: ${error.message}`, 'error');
+      if (
+        error.message.includes("body stream") ||
+        error.message.includes("already read")
+      ) {
+        addResult(
+          `Response body reading test failed: ${error.message}`,
+          "error",
+        );
       } else {
-        addResult("Response body reading test passed - different error occurred", 'success');
+        addResult(
+          "Response body reading test passed - different error occurred",
+          "success",
+        );
       }
     }
 
@@ -44,26 +59,42 @@ const ApiTestPanel: React.FC = () => {
 
     try {
       // Try to trigger a 409 by creating a device with duplicate ID
-      await apiClient.post('/v1/devices', {
-        id: 'hdbox', // Should conflict with existing device
-        name: 'Test Duplicate Device',
-        brand: 'TestBrand',
-        model: 'TestModel'
+      await apiClient.post("/v1/devices", {
+        id: "hdbox", // Should conflict with existing device
+        name: "Test Duplicate Device",
+        brand: "TestBrand",
+        model: "TestModel",
       });
 
-      addResult("409 test unexpected success - no conflict detected", 'error');
+      addResult("409 test unexpected success - no conflict detected", "error");
     } catch (error: any) {
       if (error.status === 409) {
-        const hasErrorDetails = error.response && Object.keys(error.response).length > 0;
+        const hasErrorDetails =
+          error.response && Object.keys(error.response).length > 0;
         const hasErrorType = error.response?.errorType;
         const hasSuggestion = error.response?.suggestion;
 
-        addResult(`409 error properly caught with status: ${error.status}`, 'success');
-        addResult(`Error details available: ${hasErrorDetails ? 'Yes' : 'No'}`, hasErrorDetails ? 'success' : 'error');
-        addResult(`Error type: ${hasErrorType || 'undefined'}`, hasErrorType ? 'success' : 'error');
-        addResult(`Suggestion: ${hasSuggestion || 'undefined'}`, hasSuggestion ? 'success' : 'error');
+        addResult(
+          `409 error properly caught with status: ${error.status}`,
+          "success",
+        );
+        addResult(
+          `Error details available: ${hasErrorDetails ? "Yes" : "No"}`,
+          hasErrorDetails ? "success" : "error",
+        );
+        addResult(
+          `Error type: ${hasErrorType || "undefined"}`,
+          hasErrorType ? "success" : "error",
+        );
+        addResult(
+          `Suggestion: ${hasSuggestion || "undefined"}`,
+          hasSuggestion ? "success" : "error",
+        );
       } else {
-        addResult(`409 test got different error: ${error.status} - ${error.message}`, 'error');
+        addResult(
+          `409 test got different error: ${error.status} - ${error.message}`,
+          "error",
+        );
       }
     }
 
@@ -76,14 +107,21 @@ const ApiTestPanel: React.FC = () => {
 
     try {
       // Test with a non-existent endpoint to get empty/error response
-      await apiClient.get('/v1/nonexistent');
-      addResult("Empty response test unexpected success", 'error');
+      await apiClient.get("/v1/nonexistent");
+      addResult("Empty response test unexpected success", "error");
     } catch (error: any) {
-      const hasProperErrorData = error.response && typeof error.response === 'object';
+      const hasProperErrorData =
+        error.response && typeof error.response === "object";
       const hasErrorType = error.response?.errorType;
-      
-      addResult(`Empty response properly handled: ${hasProperErrorData ? 'Yes' : 'No'}`, hasProperErrorData ? 'success' : 'error');
-      addResult(`Error type populated: ${hasErrorType || 'undefined'}`, hasErrorType ? 'success' : 'error');
+
+      addResult(
+        `Empty response properly handled: ${hasProperErrorData ? "Yes" : "No"}`,
+        hasProperErrorData ? "success" : "error",
+      );
+      addResult(
+        `Error type populated: ${hasErrorType || "undefined"}`,
+        hasErrorType ? "success" : "error",
+      );
     }
 
     setIsLoading(false);
@@ -94,7 +132,7 @@ const ApiTestPanel: React.FC = () => {
     await testResponseBodyReading();
     await test409ErrorHandling();
     await testEmptyResponseHandling();
-    addResult("All API error handling tests completed", 'success');
+    addResult("All API error handling tests completed", "success");
   };
 
   const clearResults = () => {
@@ -111,32 +149,32 @@ const ApiTestPanel: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-2">
-          <Button 
-            onClick={testResponseBodyReading} 
+          <Button
+            onClick={testResponseBodyReading}
             disabled={isLoading}
             variant="outline"
             size="sm"
           >
             Test Body Reading
           </Button>
-          <Button 
-            onClick={test409ErrorHandling} 
+          <Button
+            onClick={test409ErrorHandling}
             disabled={isLoading}
             variant="outline"
             size="sm"
           >
             Test 409 Handling
           </Button>
-          <Button 
-            onClick={testEmptyResponseHandling} 
+          <Button
+            onClick={testEmptyResponseHandling}
             disabled={isLoading}
             variant="outline"
             size="sm"
           >
             Test Empty Response
           </Button>
-          <Button 
-            onClick={runAllTests} 
+          <Button
+            onClick={runAllTests}
             disabled={isLoading}
             variant="default"
             size="sm"
@@ -154,7 +192,9 @@ const ApiTestPanel: React.FC = () => {
           </div>
           <div className="max-h-60 overflow-y-auto bg-gray-50 p-3 rounded text-sm space-y-1">
             {testResults.length === 0 ? (
-              <div className="text-gray-500">Click buttons above to test API error handling fixes</div>
+              <div className="text-gray-500">
+                Click buttons above to test API error handling fixes
+              </div>
             ) : (
               testResults.map((result, index) => (
                 <div key={index} className="font-mono text-xs">

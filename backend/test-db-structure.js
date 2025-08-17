@@ -1,11 +1,11 @@
-import { query } from './src/utils/database.js';
+import { query } from "./src/utils/database.js";
 
 async function checkDatabaseStructure() {
   try {
-    console.log('🔍 Checking database structure and foreign keys...\n');
-    
+    console.log("🔍 Checking database structure and foreign keys...\n");
+
     // Check tables
-    console.log('📋 Tables in database:');
+    console.log("📋 Tables in database:");
     const tables = await query(`
       SELECT table_name 
       FROM information_schema.tables 
@@ -13,13 +13,13 @@ async function checkDatabaseStructure() {
       AND table_type = 'BASE TABLE'
       ORDER BY table_name
     `);
-    
+
     for (const table of tables.rows) {
       console.log(`   - ${table.table_name}`);
     }
-    
+
     // Check foreign keys
-    console.log('\n🔗 Foreign Key constraints:');
+    console.log("\n🔗 Foreign Key constraints:");
     const fks = await query(`
       SELECT 
           tc.table_name,
@@ -38,28 +38,38 @@ async function checkDatabaseStructure() {
       WHERE tc.constraint_type = 'FOREIGN KEY' 
       ORDER BY tc.table_name, kcu.column_name
     `);
-    
+
     for (const fk of fks.rows) {
-      console.log(`   ${fk.table_name}.${fk.column_name} -> ${fk.foreign_table_name}.${fk.foreign_column_name}`);
+      console.log(
+        `   ${fk.table_name}.${fk.column_name} -> ${fk.foreign_table_name}.${fk.foreign_column_name}`,
+      );
     }
-    
+
     // Check if tables are empty
-    console.log('\n📊 Table row counts:');
-    const tablesToCheck = ['devices', 'problems', 'diagnostic_steps', 'diagnostic_sessions', 'tv_interfaces', 'tv_interface_marks'];
-    
+    console.log("\n📊 Table row counts:");
+    const tablesToCheck = [
+      "devices",
+      "problems",
+      "diagnostic_steps",
+      "diagnostic_sessions",
+      "tv_interfaces",
+      "tv_interface_marks",
+    ];
+
     for (const tableName of tablesToCheck) {
       try {
-        const result = await query(`SELECT COUNT(*) as count FROM ${tableName}`);
+        const result = await query(
+          `SELECT COUNT(*) as count FROM ${tableName}`,
+        );
         console.log(`   ${tableName}: ${result.rows[0].count} rows`);
       } catch (error) {
         console.log(`   ${tableName}: Table may not exist`);
       }
     }
-    
-    console.log('\n✅ Database structure check completed!');
-    
+
+    console.log("\n✅ Database structure check completed!");
   } catch (error) {
-    console.error('❌ Error checking database structure:', error);
+    console.error("❌ Error checking database structure:", error);
   }
 }
 

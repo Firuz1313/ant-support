@@ -111,7 +111,7 @@ export class ApiClient {
         if (!response.bodyUsed) {
           responseText = await response.text();
           console.log(`📡 Response length: ${responseText.length}`);
-          
+
           // Try to parse as JSON
           if (responseText.trim()) {
             try {
@@ -133,28 +133,30 @@ export class ApiClient {
         console.error(`📡 Response read error:`, readError);
         responseData = {
           error: "Failed to read response",
-          message: readError.message || "Unknown response reading error"
+          message: readError.message || "Unknown response reading error",
         };
       }
 
       // Handle HTTP errors
       if (!response.ok) {
         console.error(`❌ HTTP Error ${response.status}`);
-        
+
         // Create meaningful error data for empty responses
         if (!responseData || Object.keys(responseData).length === 0) {
           responseData = {
             error: `HTTP ${response.status}`,
             message: `Server returned ${response.status}`,
-            status: response.status
+            status: response.status,
           };
 
           // Add specific error messages for common status codes
           switch (response.status) {
             case 409:
-              responseData.error = "Conflict: Resource already exists or conflicts with current state";
+              responseData.error =
+                "Conflict: Resource already exists or conflicts with current state";
               responseData.message = "The request conflicts with existing data";
-              responseData.suggestion = "Check for duplicate names or constraint violations";
+              responseData.suggestion =
+                "Check for duplicate names or constraint violations";
               break;
             case 400:
               responseData.error = "Bad Request: Invalid data provided";
@@ -178,18 +180,20 @@ export class ApiClient {
           console.error(`   Parsed: ${JSON.stringify(responseData, null, 2)}`);
         }
 
-        const errorMessage = responseData?.error || responseData?.message || `HTTP ${response.status}`;
+        const errorMessage =
+          responseData?.error ||
+          responseData?.message ||
+          `HTTP ${response.status}`;
         throw new ApiError(
           `HTTP ${response.status}: ${errorMessage}`,
           response.status,
           responseData,
-          responseData?.errorType || 'HTTP_ERROR'
+          responseData?.errorType || "HTTP_ERROR",
         );
       }
 
       console.log(`✅ Request successful`);
       return responseData;
-
     } catch (error) {
       clearTimeout(timeoutId);
 

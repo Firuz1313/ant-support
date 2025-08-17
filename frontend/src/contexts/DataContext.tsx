@@ -1,7 +1,7 @@
 // Temporary stub for DataContext to fix imports
 // TODO: Remove this file and update all components to use API hooks
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext } from "react";
 
 interface DataContextType {
   // Devices
@@ -50,7 +50,11 @@ interface DataContextType {
   changeLogs: any[];
 
   // Stats
-  getEntityStats: (entity: string) => { total: number; active: number; inactive: number };
+  getEntityStats: (entity: string) => {
+    total: number;
+    active: number;
+    inactive: number;
+  };
 
   // Data operations
   refreshData: () => Promise<void>;
@@ -66,13 +70,15 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const useData = () => {
   const context = useContext(DataContext);
   if (context === undefined) {
-    throw new Error('useData must be used within a DataProvider');
+    throw new Error("useData must be used within a DataProvider");
   }
   return context;
 };
 
 // Stub provider that returns empty/default values
-export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const value: DataContextType = {
     devices: [],
     getActiveDevices: () => [],
@@ -116,12 +122,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getEntityStats: () => ({ total: 0, active: 0, inactive: 0 }),
 
     refreshData: async () => {},
-    exportData: async () => ({ downloadUrl: '' }),
+    exportData: async () => ({ downloadUrl: "" }),
 
     siteSettings: {
-      siteName: 'ANT Support',
-      siteDescription: 'TV Diagnostics Platform',
-      theme: 'professional'
+      siteName: "ANT Support",
+      siteDescription: "TV Diagnostics Platform",
+      theme: "professional",
     },
     updateSiteSettings: async () => ({}),
   };

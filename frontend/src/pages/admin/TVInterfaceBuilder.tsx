@@ -601,7 +601,11 @@ const TVInterfaceBuilder = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => alert('Screenshot browser will be implemented via API')}
+                        onClick={() =>
+                          alert(
+                            "Screenshot browser will be implemented via API",
+                          )
+                        }
                       >
                         <FolderOpen className="h-4 w-4 mr-2" />
                         Из библиотеки
@@ -978,7 +982,9 @@ const TVInterfaceBuilder = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => alert('Screenshot browser will be implemented via API')}
+                    onClick={() =>
+                      alert("Screenshot browser will be implemented via API")
+                    }
                   >
                     <FolderOpen className="h-4 w-4 mr-2" />
                     Из библиотеки

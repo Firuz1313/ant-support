@@ -30,13 +30,13 @@ const Index = () => {
   // Calculate stats from actual data
   const deviceStats = {
     total: devices.length,
-    active: devices.filter(d => d.isActive).length,
-    inactive: devices.filter(d => !d.isActive).length
+    active: devices.filter((d) => d.isActive).length,
+    inactive: devices.filter((d) => !d.isActive).length,
   };
   const problemStats = {
     total: problems.length,
-    active: problems.filter(p => p.status === 'published').length,
-    inactive: problems.filter(p => p.status !== 'published').length
+    active: problems.filter((p) => p.status === "published").length,
+    inactive: problems.filter((p) => p.status !== "published").length,
   };
 
   const handleStartDiagnostic = () => {
@@ -219,8 +219,9 @@ const Index = () => {
                 Конструктор интерфейсов ТВ
               </h3>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                Создавайте и управляйте интерфейсами ТВ-приставок для точной диагностики.
-                Загружайте скриншоты, отмечайте интерактивные области и интегрируйте с процессом диагностики.
+                Создавайте и управляйте интерфейсами ТВ-приставок для точной
+                диагностики. Загружайте скриншоты, отмечайте интерактивные
+                области и интегрируйте с процессом диагностики.
               </p>
             </div>
 
@@ -233,7 +234,8 @@ const Index = () => {
                   Создание интерфейсов
                 </h4>
                 <p className="text-gray-300 text-sm">
-                  Загружайте скриншоты интерфейсов ваших ТВ-приставок и создавайте детальные представления
+                  Загружайте скриншоты интерфейсов ваших ТВ-приставок и
+                  создавайте детальные представления
                 </p>
               </div>
 
@@ -245,7 +247,8 @@ const Index = () => {
                   Интерактивные области
                 </h4>
                 <p className="text-gray-300 text-sm">
-                  Отмечайте кликабельные области и зоны подсветки для эффективной диагностики
+                  Отмечайте кликабельные области и зоны подсветки для
+                  эффективной диагностики
                 </p>
               </div>
 
@@ -257,7 +260,8 @@ const Index = () => {
                   Интегр��ция в диагностику
                 </h4>
                 <p className="text-gray-300 text-sm">
-                  Созданные и��терфейсы автоматически отображаются в процессе диагностики
+                  Созданные и��терфейсы автоматически отображаются в процессе
+                  диагностики
                 </p>
               </div>
             </div>

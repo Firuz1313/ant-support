@@ -1,5 +1,5 @@
-import express from 'express';
-import { getDatabaseInfo } from '../controllers/dbInfoController.js';
+import express from "express";
+import { getDatabaseInfo } from "../controllers/dbInfoController.js";
 
 const router = express.Router();
 
@@ -8,6 +8,6 @@ const router = express.Router();
  * @desc Get database structure information
  * @access Public (for development)
  */
-router.get('/', getDatabaseInfo);
+router.get("/", getDatabaseInfo);
 
 export default router;

@@ -1,102 +1,103 @@
-import React, { useState } from 'react';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { useDevices, useUpdateDevice } from '../../hooks/useDevices';
-import { Alert, AlertDescription } from '../ui/alert';
-import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { useDevices, useUpdateDevice } from "../../hooks/useDevices";
+import { Alert, AlertDescription } from "../ui/alert";
+import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 
 export function DeviceUpdateTest() {
   const { data: devicesData, isLoading } = useDevices(1, 5);
   const updateDeviceMutation = useUpdateDevice();
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
-  const [updateName, setUpdateName] = useState<string>('');
-  const [testResult, setTestResult] = useState<string>('');
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+  const [updateName, setUpdateName] = useState<string>("");
+  const [testResult, setTestResult] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
   const devices = devicesData?.data || [];
 
   const testDeviceUpdate = async () => {
     if (!selectedDeviceId || !updateName.trim()) {
-      setTestResult('Please select a device and enter a new name');
+      setTestResult("Please select a device and enter a new name");
       setIsSuccess(false);
       return;
     }
 
-    const selectedDevice = devices.find(d => d.id === selectedDeviceId);
+    const selectedDevice = devices.find((d) => d.id === selectedDeviceId);
     if (!selectedDevice) {
-      setTestResult('Selected device not found');
+      setTestResult("Selected device not found");
       setIsSuccess(false);
       return;
     }
 
     try {
-      setTestResult('Testing device update...');
+      setTestResult("Testing device update...");
       setIsSuccess(false);
 
-      console.log('🧪 Testing device update:', {
+      console.log("🧪 Testing device update:", {
         deviceId: selectedDeviceId,
         originalName: selectedDevice.name,
         newName: updateName,
-        originalDevice: selectedDevice
+        originalDevice: selectedDevice,
       });
 
       // Test 1: Update with same name (should NOT cause 409)
-      console.log('🧪 Test 1: Update with same name');
+      console.log("🧪 Test 1: Update with same name");
       await updateDeviceMutation.mutateAsync({
         id: selectedDeviceId,
         data: {
           name: selectedDevice.name,
-          description: `Updated at ${new Date().toISOString()}`
-        }
+          description: `Updated at ${new Date().toISOString()}`,
+        },
       });
 
-      console.log('✅ Test 1 passed: Same name update works');
+      console.log("✅ Test 1 passed: Same name update works");
 
       // Test 2: Update with new name
-      console.log('🧪 Test 2: Update with new name');
+      console.log("🧪 Test 2: Update with new name");
       await updateDeviceMutation.mutateAsync({
         id: selectedDeviceId,
         data: {
           name: updateName,
-          description: `Updated with new name at ${new Date().toISOString()}`
-        }
+          description: `Updated with new name at ${new Date().toISOString()}`,
+        },
       });
 
-      console.log('✅ Test 2 passed: New name update works');
+      console.log("✅ Test 2 passed: New name update works");
 
       // Test 3: Update back to original name
-      console.log('🧪 Test 3: Update back to original name');
+      console.log("🧪 Test 3: Update back to original name");
       await updateDeviceMutation.mutateAsync({
         id: selectedDeviceId,
         data: {
           name: selectedDevice.name,
-          description: `Restored original name at ${new Date().toISOString()}`
-        }
+          description: `Restored original name at ${new Date().toISOString()}`,
+        },
       });
 
-      console.log('✅ Test 3 passed: Restore original name works');
+      console.log("✅ Test 3 passed: Restore original name works");
 
-      setTestResult('All tests passed! Device update functionality is working correctly.');
+      setTestResult(
+        "All tests passed! Device update functionality is working correctly.",
+      );
       setIsSuccess(true);
-
     } catch (error: any) {
-      console.error('❌ Test failed:', error);
-      
-      let errorMessage = 'Test failed: ';
-      
+      console.error("❌ Test failed:", error);
+
+      let errorMessage = "Test failed: ";
+
       if (error?.status === 409) {
-        errorMessage += `409 Conflict - ${error?.response?.error || error?.message || 'Unknown conflict'}`;
+        errorMessage += `409 Conflict - ${error?.response?.error || error?.message || "Unknown conflict"}`;
         if (error?.response?.suggestion) {
           errorMessage += `\nSuggestion: ${error.response.suggestion}`;
         }
-      } else if (error?.message?.includes('body stream')) {
+      } else if (error?.message?.includes("body stream")) {
         errorMessage += `Body stream error - ${error.message}`;
       } else {
-        errorMessage += error?.message || 'Unknown error';
+        errorMessage += error?.message || "Unknown error";
       }
-      
+
       setTestResult(errorMessage);
       setIsSuccess(false);
     }
@@ -123,24 +124,25 @@ export function DeviceUpdateTest() {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <span>Device Update Test</span>
-          {testResult && (
-            isSuccess ? 
-              <CheckCircle2 className="h-5 w-5 text-green-500" /> : 
+          {testResult &&
+            (isSuccess ? (
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            ) : (
               <AlertTriangle className="h-5 w-5 text-red-500" />
-          )}
+            ))}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <Label htmlFor="device-select">Select Device to Test</Label>
-          <select 
+          <select
             id="device-select"
             value={selectedDeviceId}
             onChange={(e) => setSelectedDeviceId(e.target.value)}
             className="w-full p-2 border rounded"
           >
             <option value="">Choose a device...</option>
-            {devices.map(device => (
+            {devices.map((device) => (
               <option key={device.id} value={device.id}>
                 {device.name} ({device.brand} {device.model})
               </option>
@@ -158,9 +160,13 @@ export function DeviceUpdateTest() {
           />
         </div>
 
-        <Button 
+        <Button
           onClick={testDeviceUpdate}
-          disabled={!selectedDeviceId || !updateName.trim() || updateDeviceMutation.isPending}
+          disabled={
+            !selectedDeviceId ||
+            !updateName.trim() ||
+            updateDeviceMutation.isPending
+          }
           className="w-full"
         >
           {updateDeviceMutation.isPending ? (
@@ -169,7 +175,7 @@ export function DeviceUpdateTest() {
               Testing...
             </>
           ) : (
-            'Run Device Update Test'
+            "Run Device Update Test"
           )}
         </Button>
 
@@ -182,7 +188,9 @@ export function DeviceUpdateTest() {
         )}
 
         <div className="text-sm text-gray-600">
-          <p><strong>This test will:</strong></p>
+          <p>
+            <strong>This test will:</strong>
+          </p>
           <ol className="list-decimal list-inside space-y-1">
             <li>Update device with same name (should work)</li>
             <li>Update device with new name (should work)</li>

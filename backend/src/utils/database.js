@@ -17,31 +17,36 @@ const { Pool, Client } = pkg;
 const USE_MOCK_DB = false;
 
 // Конфигурация подключения к PostgreSQL
-const dbConfig = process.env.DATABASE_URL ? {
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+const dbConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
 
-  // Настройки pool соединений
-  max: 20, // максимальное количество соединений в pool
-  min: 2, // минимальное количество соединений
-  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
-  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
-  maxUses: 7500, // максимальное количество использований соединения
-} : {
-  host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME || "ant_support",
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "password",
-  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+      // Настройки pool соединений
+      max: 20, // максимальное количество соединений в pool
+      min: 2, // минимальное количество соединений
+      idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
+      connectionTimeoutMillis:
+        parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
+      maxUses: 7500, // максимальное количество использований соединения
+    }
+  : {
+      host: process.env.DB_HOST || "localhost",
+      port: parseInt(process.env.DB_PORT) || 5432,
+      database: process.env.DB_NAME || "ant_support",
+      user: process.env.DB_USER || "postgres",
+      password: process.env.DB_PASSWORD || "password",
+      ssl:
+        process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 
-  // Настройки pool соединений
-  max: 20,
-  min: 2,
-  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
-  connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
-  maxUses: 7500,
-};
+      // Настройки pool соединений
+      max: 20,
+      min: 2,
+      idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
+      connectionTimeoutMillis:
+        parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
+      maxUses: 7500,
+    };
 
 // Создание pool соединений
 const pool = new Pool(dbConfig);

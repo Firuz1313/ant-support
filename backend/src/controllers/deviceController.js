@@ -1,6 +1,12 @@
-import Device from '../models/Device.js';
-import { deviceValidation, validateRequest } from '../middleware/validateRequest.js';
-import { deviceCreationValidation, validateRequest as newValidateRequest } from '../middleware/newValidation.js';
+import Device from "../models/Device.js";
+import {
+  deviceValidation,
+  validateRequest,
+} from "../middleware/validateRequest.js";
+import {
+  deviceCreationValidation,
+  validateRequest as newValidateRequest,
+} from "../middleware/newValidation.js";
 
 const deviceModel = new Device();
 
@@ -14,35 +20,35 @@ class DeviceController {
    */
   async getDevices(req, res, next) {
     try {
-      const { 
-        search, 
-        status, 
-        is_active, 
-        page = 1, 
-        limit = 20, 
-        sort = 'order_index', 
-        order = 'asc',
+      const {
+        search,
+        status,
+        is_active,
+        page = 1,
+        limit = 20,
+        sort = "order_index",
+        order = "asc",
         include_stats = false,
-        admin = false
+        admin = false,
       } = req.query;
 
       const filters = {};
       if (search) filters.search = search;
       if (status) filters.status = status;
-      if (is_active !== undefined) filters.is_active = is_active === 'true';
+      if (is_active !== undefined) filters.is_active = is_active === "true";
 
       const options = {
         limit: Math.min(parseInt(limit), 100),
         offset: (parseInt(page) - 1) * Math.min(parseInt(limit), 100),
         sortBy: sort,
-        sortOrder: order.toUpperCase()
+        sortOrder: order.toUpperCase(),
       };
 
       let devices;
-      if (admin === 'true') {
+      if (admin === "true") {
         // Для админ панели - расширенная информация
         devices = await deviceModel.getForAdmin(filters, options);
-      } else if (include_stats === 'true') {
+      } else if (include_stats === "true") {
         // С статистикой
         devices = await deviceModel.findAllWithStats(filters, options);
       } else {
@@ -63,9 +69,9 @@ class DeviceController {
           total,
           totalPages,
           hasNext: parseInt(page) < totalPages,
-          hasPrev: parseInt(page) > 1
+          hasPrev: parseInt(page) > 1,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -82,7 +88,7 @@ class DeviceController {
       const { include_stats = false } = req.query;
 
       let device;
-      if (include_stats === 'true') {
+      if (include_stats === "true") {
         device = await deviceModel.findByIdWithStats(id);
       } else {
         device = await deviceModel.findById(id);
@@ -91,16 +97,16 @@ class DeviceController {
       if (!device) {
         return res.status(404).json({
           success: false,
-          error: 'Устройство не найдено',
-          errorType: 'NOT_FOUND',
-          timestamp: new Date().toISOString()
+          error: "Устройство не найдено",
+          errorType: "NOT_FOUND",
+          timestamp: new Date().toISOString(),
         });
       }
 
       res.json({
         success: true,
         data: device,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -118,15 +124,15 @@ class DeviceController {
       // Проверяем уникальность названия для активных устройств
       const existingDevice = await deviceModel.findOne({
         name: deviceData.name,
-        is_active: true
+        is_active: true,
       });
 
       if (existingDevice) {
         return res.status(409).json({
           success: false,
-          error: 'Устройство с таким названием уже существует',
-          errorType: 'DUPLICATE_ERROR',
-          timestamp: new Date().toISOString()
+          error: "Устройство с таким названием уже существует",
+          errorType: "DUPLICATE_ERROR",
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -135,8 +141,8 @@ class DeviceController {
       res.status(201).json({
         success: true,
         data: newDevice,
-        message: 'Устройство успешно создано',
-        timestamp: new Date().toISOString()
+        message: "Устройство успешно создано",
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -157,9 +163,9 @@ class DeviceController {
       if (!existingDevice) {
         return res.status(404).json({
           success: false,
-          error: 'Устройство не найдено',
-          errorType: 'NOT_FOUND',
-          timestamp: new Date().toISOString()
+          error: "Устройство не найдено",
+          errorType: "NOT_FOUND",
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -167,15 +173,15 @@ class DeviceController {
       if (updateData.name && updateData.name !== existingDevice.name) {
         const duplicateDevice = await deviceModel.findOne({
           name: updateData.name,
-          is_active: true
+          is_active: true,
         });
 
         if (duplicateDevice && String(duplicateDevice.id) !== String(id)) {
           return res.status(409).json({
             success: false,
-            error: 'Устройство с таким названием уже существует',
-            errorType: 'DUPLICATE_ERROR',
-            timestamp: new Date().toISOString()
+            error: "Устройство с таким названием уже существует",
+            errorType: "DUPLICATE_ERROR",
+            timestamp: new Date().toISOString(),
           });
         }
       }
@@ -185,8 +191,8 @@ class DeviceController {
       res.json({
         success: true,
         data: updatedDevice,
-        message: 'Устройство успешно обновлено',
-        timestamp: new Date().toISOString()
+        message: "Устройство успешно обновлено",
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -207,27 +213,27 @@ class DeviceController {
       if (!existingDevice) {
         return res.status(404).json({
           success: false,
-          error: 'Устройство не найдено',
-          errorType: 'NOT_FOUND',
-          timestamp: new Date().toISOString()
+          error: "Устройство не найдено",
+          errorType: "NOT_FOUND",
+          timestamp: new Date().toISOString(),
         });
       }
 
       // Проверяем возможность удаления
       const deleteCheck = await deviceModel.canDelete(id);
-      if (!deleteCheck.canDelete && force !== 'true') {
+      if (!deleteCheck.canDelete && force !== "true") {
         return res.status(409).json({
           success: false,
           error: deleteCheck.reason,
-          errorType: 'CONSTRAINT_ERROR',
+          errorType: "CONSTRAINT_ERROR",
           suggestion: deleteCheck.suggestion,
           canForceDelete: false, // В данном случае не разрешаем принудительное удаление
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       let deletedDevice;
-      if (force === 'true') {
+      if (force === "true") {
         // Жесткое удаление (осторожно!)
         deletedDevice = await deviceModel.delete(id);
       } else {
@@ -238,8 +244,11 @@ class DeviceController {
       res.json({
         success: true,
         data: deletedDevice,
-        message: force === 'true' ? 'Устройство удалено безвозвратно' : 'Устройство архивировано',
-        timestamp: new Date().toISOString()
+        message:
+          force === "true"
+            ? "Устройство удалено безвозвратно"
+            : "Устройство архивировано",
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -258,17 +267,17 @@ class DeviceController {
       if (!restoredDevice) {
         return res.status(404).json({
           success: false,
-          error: 'Устройство не найдено или уже активно',
-          errorType: 'NOT_FOUND',
-          timestamp: new Date().toISOString()
+          error: "Устройство не найдено или уже активно",
+          errorType: "NOT_FOUND",
+          timestamp: new Date().toISOString(),
         });
       }
 
       res.json({
         success: true,
         data: restoredDevice,
-        message: 'Устройство успешно восстановлено',
-        timestamp: new Date().toISOString()
+        message: "Устройство успешно восстановлено",
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -286,22 +295,22 @@ class DeviceController {
       if (!searchTerm || searchTerm.trim().length < 2) {
         return res.status(400).json({
           success: false,
-          error: 'Поисковый запрос должен содержать минимум 2 символа',
-          errorType: 'VALIDATION_ERROR',
-          timestamp: new Date().toISOString()
+          error: "Поисковый запрос должен содержать минимум 2 символа",
+          errorType: "VALIDATION_ERROR",
+          timestamp: new Date().toISOString(),
         });
       }
 
       const devices = await deviceModel.search(searchTerm.trim(), {
         limit: Math.min(parseInt(limit), 50),
-        offset: parseInt(offset)
+        offset: parseInt(offset),
       });
 
       res.json({
         success: true,
         data: devices,
         query: searchTerm.trim(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -316,12 +325,14 @@ class DeviceController {
     try {
       const { limit = 10 } = req.query;
 
-      const devices = await deviceModel.getPopular(Math.min(parseInt(limit), 20));
+      const devices = await deviceModel.getPopular(
+        Math.min(parseInt(limit), 20),
+      );
 
       res.json({
         success: true,
         data: devices,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -339,9 +350,9 @@ class DeviceController {
       if (!Array.isArray(deviceIds) || deviceIds.length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Необходимо предоставить массив ID устройств',
-          errorType: 'VALIDATION_ERROR',
-          timestamp: new Date().toISOString()
+          error: "Необходимо предоставить массив ID устройств",
+          errorType: "VALIDATION_ERROR",
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -350,8 +361,8 @@ class DeviceController {
       res.json({
         success: true,
         data: updatedDevices,
-        message: 'Порядок устройств обновлен',
-        timestamp: new Date().toISOString()
+        message: "Порядок устройств обновлен",
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -369,7 +380,7 @@ class DeviceController {
       res.json({
         success: true,
         data: stats,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -387,9 +398,9 @@ class DeviceController {
       if (!Array.isArray(updates) || updates.length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Необходимо предоставить массив обновлений',
-          errorType: 'VALIDATION_ERROR',
-          timestamp: new Date().toISOString()
+          error: "Необходимо предоставить массив обновлений",
+          errorType: "VALIDATION_ERROR",
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -398,9 +409,9 @@ class DeviceController {
         if (!update.id || !update.data) {
           return res.status(400).json({
             success: false,
-            error: 'Каждое обновление должно содержать id и data',
-            errorType: 'VALIDATION_ERROR',
-            timestamp: new Date().toISOString()
+            error: "Каждое обновление должно содержать id и data",
+            errorType: "VALIDATION_ERROR",
+            timestamp: new Date().toISOString(),
           });
         }
       }
@@ -411,7 +422,7 @@ class DeviceController {
         success: true,
         data: updatedDevices,
         message: `Обновлено устройств: ${updatedDevices.length}`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       next(error);
@@ -424,34 +435,34 @@ class DeviceController {
    */
   async exportDevices(req, res, next) {
     try {
-      const { format = 'json', include_problems = false } = req.query;
+      const { format = "json", include_problems = false } = req.query;
 
       const devices = await deviceModel.findAll({ is_active: true });
 
       let exportData = devices;
 
-      if (include_problems === 'true') {
+      if (include_problems === "true") {
         // Здесь можно добавить логику включения проблем
         // Для этого понадобится импорт Problem модели
       }
 
-      if (format === 'json') {
+      if (format === "json") {
         res.json({
           success: true,
           data: exportData,
           meta: {
             exportedAt: new Date().toISOString(),
             totalRecords: exportData.length,
-            format: 'json'
-          }
+            format: "json",
+          },
         });
       } else {
         // Другие ф��рматы можно добавить позже (CSV, XML и т.д.)
         res.status(400).json({
           success: false,
-          error: 'Неподдерживаемый формат экспор��а',
-          supportedFormats: ['json'],
-          timestamp: new Date().toISOString()
+          error: "Неподдерживаемый формат экспор��а",
+          supportedFormats: ["json"],
+          timestamp: new Date().toISOString(),
         });
       }
     } catch (error) {
@@ -468,21 +479,21 @@ const deviceController = new DeviceController();
  */
 export const createDeviceNew = async (req, res, next) => {
   try {
-    console.log('🆕 Creating device with new validation');
+    console.log("🆕 Creating device with new validation");
     const deviceData = req.body;
 
     // Проверяем уникальность названия для активных устройств
     const existingDevice = await deviceModel.findOne({
       name: deviceData.name,
-      is_active: true
+      is_active: true,
     });
 
     if (existingDevice) {
       return res.status(409).json({
         success: false,
-        error: 'Устройство с таким названием уже существует',
-        errorType: 'DUPLICATE_ERROR',
-        timestamp: new Date().toISOString()
+        error: "Устройство с таким названием уже существует",
+        errorType: "DUPLICATE_ERROR",
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -491,8 +502,8 @@ export const createDeviceNew = async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: newDevice,
-      message: 'Устройство успешно создано',
-      timestamp: new Date().toISOString()
+      message: "Устройство успешно создано",
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     next(error);
@@ -506,17 +517,35 @@ const validateDeviceUpdate = validateRequest(deviceValidation.update);
 
 // Экспортируем методы с примененной валидацией
 export const getDevices = deviceController.getDevices.bind(deviceController);
-export const getDeviceById = deviceController.getDeviceById.bind(deviceController);
-export const createDevice = [validateDeviceCreation, deviceController.createDevice.bind(deviceController)];
-export const createDeviceNewWithValidation = [validateDeviceCreationNew, createDeviceNew];
-export const updateDevice = [validateDeviceUpdate, deviceController.updateDevice.bind(deviceController)];
-export const deleteDevice = deviceController.deleteDevice.bind(deviceController);
-export const restoreDevice = deviceController.restoreDevice.bind(deviceController);
-export const searchDevices = deviceController.searchDevices.bind(deviceController);
-export const getPopularDevices = deviceController.getPopularDevices.bind(deviceController);
-export const reorderDevices = deviceController.reorderDevices.bind(deviceController);
-export const getDeviceStats = deviceController.getDeviceStats.bind(deviceController);
-export const bulkUpdateDevices = deviceController.bulkUpdateDevices.bind(deviceController);
-export const exportDevices = deviceController.exportDevices.bind(deviceController);
+export const getDeviceById =
+  deviceController.getDeviceById.bind(deviceController);
+export const createDevice = [
+  validateDeviceCreation,
+  deviceController.createDevice.bind(deviceController),
+];
+export const createDeviceNewWithValidation = [
+  validateDeviceCreationNew,
+  createDeviceNew,
+];
+export const updateDevice = [
+  validateDeviceUpdate,
+  deviceController.updateDevice.bind(deviceController),
+];
+export const deleteDevice =
+  deviceController.deleteDevice.bind(deviceController);
+export const restoreDevice =
+  deviceController.restoreDevice.bind(deviceController);
+export const searchDevices =
+  deviceController.searchDevices.bind(deviceController);
+export const getPopularDevices =
+  deviceController.getPopularDevices.bind(deviceController);
+export const reorderDevices =
+  deviceController.reorderDevices.bind(deviceController);
+export const getDeviceStats =
+  deviceController.getDeviceStats.bind(deviceController);
+export const bulkUpdateDevices =
+  deviceController.bulkUpdateDevices.bind(deviceController);
+export const exportDevices =
+  deviceController.exportDevices.bind(deviceController);
 
 export default deviceController;

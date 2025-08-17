@@ -17,7 +17,9 @@ import { useProblemsByDevice } from "@/hooks/useProblems";
 
 const DeviceSelection = () => {
   const navigate = useNavigate();
-  const { data: devicesData, isLoading: devicesLoading } = useDevices(1, 50, { is_active: true });
+  const { data: devicesData, isLoading: devicesLoading } = useDevices(1, 50, {
+    is_active: true,
+  });
   const devices = devicesData?.data || [];
   const [animatedIcons, setAnimatedIcons] = useState<boolean[]>([]);
 
@@ -112,7 +114,8 @@ const DeviceSelection = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {devices.map((device) => {
                 // Use problems count from device stats if available, otherwise default to 0
-                const problemsCount = device.problems_count || device.published_problems_count || 0;
+                const problemsCount =
+                  device.problems_count || device.published_problems_count || 0;
 
                 return (
                   <Card

@@ -1,25 +1,33 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { sessionsApi, SessionFilters, SessionCreateData, SessionUpdateData } from '../api';
-import { DiagnosticSession } from '../types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  sessionsApi,
+  SessionFilters,
+  SessionCreateData,
+  SessionUpdateData,
+} from "../api";
+import { DiagnosticSession } from "../types";
 
 // Query keys
 export const sessionKeys = {
-  all: ['sessions'] as const,
-  lists: () => [...sessionKeys.all, 'list'] as const,
+  all: ["sessions"] as const,
+  lists: () => [...sessionKeys.all, "list"] as const,
   list: (filters: SessionFilters) => [...sessionKeys.lists(), filters] as const,
-  details: () => [...sessionKeys.all, 'detail'] as const,
-  detail: (id: string, includeProgress?: boolean) => [...sessionKeys.details(), id, includeProgress] as const,
-  active: () => [...sessionKeys.all, 'active'] as const,
-  stats: () => [...sessionKeys.all, 'stats'] as const,
-  analytics: (period: string, limit: number) => [...sessionKeys.all, 'analytics', period, limit] as const,
-  popular: (limit: number, timeframe: string) => [...sessionKeys.all, 'popular', limit, timeframe] as const,
+  details: () => [...sessionKeys.all, "detail"] as const,
+  detail: (id: string, includeProgress?: boolean) =>
+    [...sessionKeys.details(), id, includeProgress] as const,
+  active: () => [...sessionKeys.all, "active"] as const,
+  stats: () => [...sessionKeys.all, "stats"] as const,
+  analytics: (period: string, limit: number) =>
+    [...sessionKeys.all, "analytics", period, limit] as const,
+  popular: (limit: number, timeframe: string) =>
+    [...sessionKeys.all, "popular", limit, timeframe] as const,
 };
 
 // Hooks for querying sessions
 export const useSessions = (
   page: number = 1,
   limit: number = 20,
-  filters: SessionFilters = {}
+  filters: SessionFilters = {},
 ) => {
   return useQuery({
     queryKey: sessionKeys.list({ page, limit, ...filters }),
@@ -45,12 +53,14 @@ export const useActiveSessions = (limit: number = 50, offset: number = 0) => {
   });
 };
 
-export const useSessionStats = (filters: {
-  deviceId?: string;
-  problemId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-} = {}) => {
+export const useSessionStats = (
+  filters: {
+    deviceId?: string;
+    problemId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {},
+) => {
   return useQuery({
     queryKey: [...sessionKeys.stats(), filters],
     queryFn: () => sessionsApi.getSessionStats(filters),
@@ -58,7 +68,10 @@ export const useSessionStats = (filters: {
   });
 };
 
-export const usePopularProblems = (limit: number = 10, timeframe: string = '30 days') => {
+export const usePopularProblems = (
+  limit: number = 10,
+  timeframe: string = "30 days",
+) => {
   return useQuery({
     queryKey: sessionKeys.popular(limit, timeframe),
     queryFn: () => sessionsApi.getPopularProblems(limit, timeframe),
@@ -67,8 +80,8 @@ export const usePopularProblems = (limit: number = 10, timeframe: string = '30 d
 };
 
 export const useTimeAnalytics = (
-  period: 'hour' | 'day' | 'week' | 'month' = 'day',
-  limit: number = 30
+  period: "hour" | "day" | "week" | "month" = "day",
+  limit: number = 30,
 ) => {
   return useQuery({
     queryKey: sessionKeys.analytics(period, limit),
@@ -153,7 +166,8 @@ export const useCleanupOldSessions = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (daysToKeep: number = 90) => sessionsApi.cleanupOldSessions(daysToKeep),
+    mutationFn: (daysToKeep: number = 90) =>
+      sessionsApi.cleanupOldSessions(daysToKeep),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionKeys.all });
     },
@@ -162,11 +176,11 @@ export const useCleanupOldSessions = () => {
 
 export const useExportSessions = () => {
   return useMutation({
-    mutationFn: ({ 
-      format = 'json',
-      filters = {}
-    }: { 
-      format?: string; 
+    mutationFn: ({
+      format = "json",
+      filters = {},
+    }: {
+      format?: string;
       filters?: any;
     }) => sessionsApi.exportSessions(format, filters),
   });
