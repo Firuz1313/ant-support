@@ -101,7 +101,7 @@ router.get("/docs", (req, res) => {
             "GET /problems/popular": "Популярные проблемы",
             "GET /problems/stats": "Статистика проблем",
             "GET /problems/export": "Экспорт проблем",
-            "GET /problems/device/:deviceId": "Проблемы по устройству",
+            "GET /problems/device/:deviceId": "Проблемы по ��стройству",
             "GET /problems/category/:category": "Проблемы по категории",
             "POST /problems/:id/duplicate": "Дублирование проблемы",
             "POST /problems/:id/publish": "Публикация проблемы",
@@ -140,7 +140,7 @@ router.get("/docs", (req, res) => {
             "POST /sessions": "Создание новой сессии",
             "PUT /sessions/:id": "Обновление сессии",
             "DELETE /sessions/:id": "Удаление сессии",
-            "GET /sessions/active": "Активные сессии",
+            "GET /sessions/active": "Активные ��ессии",
             "GET /sessions/stats": "Статистика сессий",
             "GET /sessions/popular-problems": "Популярные п��облемы",
             "GET /sessions/analytics": "Аналитика по времени",
@@ -159,7 +159,7 @@ router.get("/docs", (req, res) => {
             "GET /tv-interfaces/:id": "Получение интерфейса ТВ по ID",
             "POST /tv-interfaces": "Создание нового интерфейса ТВ",
             "PUT /tv-interfaces/:id": "Обновление интерфейса ТВ",
-            "DELETE /tv-interfaces/:id": "Удаление инте��фейса ТВ",
+            "DELETE /tv-interfaces/:id": "Удаление интерфейса ТВ",
             "POST /tv-interfaces/:id/duplicate": "Дублирование интерфейса ТВ",
             "PATCH /tv-interfaces/:id/toggle":
               "Активация/деактивация интерфейса ТВ",
@@ -177,7 +177,7 @@ router.get("/docs", (req, res) => {
         409: "Conflict - Конфликт данных (дубликаты, ограничения)",
         422: "Unprocessable Entity - Ошибка бизнес-логики",
         429: "Too Many Requests - Превышен лимит запросов",
-        500: "Internal Server Error - Внутренняя ошибка сервера",
+        500: "Internal Server Error - Внутренняя ошибка с��рвера",
         503: "Service Unavailable - Сервис временно недоступен",
       },
       responseFormat: {
@@ -215,9 +215,6 @@ router.use(`${API_V1_PREFIX}/sessions`, sessionRoutes);
 router.use(`${API_V1_PREFIX}/tv-interfaces`, tvInterfaceRoutes);
 router.use(`${API_V1_PREFIX}/tv-interface-marks`, tvInterfaceMarkRoutes);
 router.use(`${API_V1_PREFIX}/cleanup`, cleanupRoutes);
-router.use(`${API_V1_PREFIX}/seed`, seedRoutes);
-router.use(`${API_V1_PREFIX}/test-data`, testDataRoutes);
-router.use(`${API_V1_PREFIX}/test`, testRoutes);
 
 // Обработчик для несуществующих эндпоинтов API
 router.use("*", (req, res) => {
