@@ -103,7 +103,7 @@ router.get("/docs", (req, res) => {
             "GET /problems/stats": "Статистика проблем",
             "GET /problems/export": "Экспорт проблем",
             "GET /problems/device/:deviceId": "Проблемы по устройству",
-            "GET /problems/category/:category": "Проблемы по категории",
+            "GET /problems/category/:category": "Проблемы по кате��ории",
             "POST /problems/:id/duplicate": "Дублирование проблемы",
             "POST /problems/:id/publish": "Публикация проблемы",
             "POST /problems/:id/unpublish": "Снятие с публикации",
@@ -216,8 +216,9 @@ router.use(`${API_V1_PREFIX}/sessions`, sessionRoutes);
 router.use(`${API_V1_PREFIX}/tv-interfaces`, tvInterfaceRoutes);
 router.use(`${API_V1_PREFIX}/tv-interface-marks`, tvInterfaceMarkRoutes);
 router.use(`${API_V1_PREFIX}/cleanup`, cleanupRoutes);
+router.use(`${API_V1_PREFIX}/db-info`, dbInfoRoutes);
 
-// Обработчик для несуществующих эндпоинтов API
+// Обра��отчик для несуществующих эндпоинтов API
 router.use("*", (req, res) => {
   res.status(404).json({
     success: false,
