@@ -95,7 +95,7 @@ export const problemValidation = {
 // Схемы валидации для диагностических шагов
 export const stepValidation = {
   create: Joi.object({
-    id: commonSchemas.id.optional(),
+    id: Joi.string().min(1).max(255).optional(),
     problem_id: commonSchemas.id.required(),
     device_id: commonSchemas.id.required(),
     step_number: commonSchemas.positiveInteger.required(),
