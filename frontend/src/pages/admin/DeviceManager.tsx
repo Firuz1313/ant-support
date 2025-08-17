@@ -170,7 +170,8 @@ const DeviceManager = () => {
   };
 
   const handleDelete = async (deviceId: string) => {
-    const problemsCount = getProblemsForDevice(deviceId).length;
+    const device = devices.find(d => d.id === deviceId);
+    const problemsCount = device?.problems_count || device?.published_problems_count || 0;
     if (problemsCount > 0) {
       alert(
         `Нельзя удалить приставку с ${problemsCount} активными проблемами. Сначала удалите или переместите проблемы.`,
@@ -178,7 +179,7 @@ const DeviceManager = () => {
       return;
     }
     try {
-      await deleteDevice(deviceId);
+      await deleteDeviceMutation.mutateAsync({ id: deviceId });
     } catch (error) {
       console.error("Error deleting device:", error);
       alert("Ошибка при удалении приставки");
