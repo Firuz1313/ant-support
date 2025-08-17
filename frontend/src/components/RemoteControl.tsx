@@ -18,8 +18,6 @@ import {
   Minus,
   Plus,
 } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
-
 interface RemoteControlProps {
   highlightButton?: string;
   onButtonClick?: (buttonId: string) => void;
@@ -37,12 +35,10 @@ const RemoteControl = ({
   className,
   showButtonPosition,
 }: RemoteControlProps) => {
-  const { getRemoteById, getDefaultRemote } = useData();
-
-  // Get the specific remote or fall back to default
-  const remote = remoteId ? getRemoteById(remoteId) : getDefaultRemote();
-  const useCustomRemote =
-    remote && remote.imageData && remote.buttons.length > 0;
+  // For now, we'll use the default remote layout
+  // TODO: Implement proper remote fetching using API hooks
+  const remote = null;
+  const useCustomRemote = false;
 
   const handleButtonClick = (buttonId: string) => {
     if (onButtonClick) {
