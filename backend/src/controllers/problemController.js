@@ -203,7 +203,7 @@ class ProblemController {
           is_active: true
         });
 
-        if (duplicateProblem && duplicateProblem.id !== id) {
+        if (duplicateProblem && String(duplicateProblem.id) !== String(id)) {
           return res.status(409).json({
             success: false,
             error: 'Проблема с таким названием уже существует для данного устройства',
@@ -447,7 +447,7 @@ class ProblemController {
       if (!existingProblem) {
         return res.status(404).json({
           success: false,
-          error: 'Проблема не найдена',
+          error: 'Пробл��ма не найдена',
           errorType: 'NOT_FOUND',
           timestamp: new Date().toISOString()
         });
@@ -660,7 +660,7 @@ const problemCreationSchema = Joi.object({
   metadata: Joi.object().unknown(true).optional()
 });
 
-// Применяем НОВУЮ валидацию к методам
+// Применяем НОВУЮ валидацию к мет��дам
 const validateProblemCreation = newValidateRequest(problemCreationValidation);
 const validateProblemUpdate = validateRequest(problemValidation.update);
 
