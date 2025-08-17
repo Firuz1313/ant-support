@@ -528,6 +528,11 @@ const AdminDashboard = () => {
         <ApiTestPanel />
       </div>
 
+      {/* Device Update Test */}
+      <div className="mt-6">
+        <DeviceUpdateTest />
+      </div>
+
       {/* Recent Problems */}
       <Card>
         <CardHeader>
