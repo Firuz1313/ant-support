@@ -40,7 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useData } from "@/contexts/DataContext";
+import { useDevices, useCreateDevice, useUpdateDevice, useDeleteDevice } from "@/hooks/useDevices";
 
 interface Device {
   id: string;
@@ -57,13 +57,12 @@ interface Device {
 }
 
 const DeviceManager = () => {
-  const {
-    devices,
-    createDevice,
-    updateDevice,
-    deleteDevice,
-    getProblemsForDevice,
-  } = useData();
+  const { data: devicesData } = useDevices(1, 50, { admin: true });
+  const createDeviceMutation = useCreateDevice();
+  const updateDeviceMutation = useUpdateDevice();
+  const deleteDeviceMutation = useDeleteDevice();
+
+  const devices = devicesData?.data || [];
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
