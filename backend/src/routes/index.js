@@ -6,6 +6,7 @@ import sessionRoutes from "./sessionRoutes.js";
 import tvInterfaceRoutes from "./tvInterfaceRoutes.js";
 import tvInterfaceMarkRoutes from "./tvInterfaceMarkRoutes.js";
 import cleanupRoutes from "./cleanupRoutes.js";
+import dbInfoRoutes from "./dbInfoRoutes.js";
 
 const router = express.Router();
 
@@ -101,7 +102,7 @@ router.get("/docs", (req, res) => {
             "GET /problems/popular": "Популярные проблемы",
             "GET /problems/stats": "Статистика проблем",
             "GET /problems/export": "Экспорт проблем",
-            "GET /problems/device/:deviceId": "Проблемы по ��стройству",
+            "GET /problems/device/:deviceId": "Проблемы по устройству",
             "GET /problems/category/:category": "Проблемы по категории",
             "POST /problems/:id/duplicate": "Дублирование проблемы",
             "POST /problems/:id/publish": "Публикация проблемы",
@@ -140,7 +141,7 @@ router.get("/docs", (req, res) => {
             "POST /sessions": "Создание новой сессии",
             "PUT /sessions/:id": "Обновление сессии",
             "DELETE /sessions/:id": "Удаление сессии",
-            "GET /sessions/active": "Активные ��ессии",
+            "GET /sessions/active": "Активные сессии",
             "GET /sessions/stats": "Статистика сессий",
             "GET /sessions/popular-problems": "Популярные п��облемы",
             "GET /sessions/analytics": "Аналитика по времени",
@@ -177,7 +178,7 @@ router.get("/docs", (req, res) => {
         409: "Conflict - Конфликт данных (дубликаты, ограничения)",
         422: "Unprocessable Entity - Ошибка бизнес-логики",
         429: "Too Many Requests - Превышен лимит запросов",
-        500: "Internal Server Error - Внутренняя ошибка с��рвера",
+        500: "Internal Server Error - Внутренняя ошибка сервера",
         503: "Service Unavailable - Сервис временно недоступен",
       },
       responseFormat: {
