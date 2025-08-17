@@ -105,10 +105,6 @@ export async function testConnection() {
 
 // Функция выполнения запроса с логированием
 export async function query(text, params = []) {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.query(text, params);
-  }
-
   const start = Date.now();
   let client;
 
@@ -134,17 +130,6 @@ export async function query(text, params = []) {
     console.error(`❌ SQL Error after ${duration}ms:`, error.message);
     console.error("🔍 Query:", text);
     console.error("🔍 Parameters:", params);
-
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      if (!mockDb) {
-        mockDb = await import("./mockDatabase.js");
-      }
-      return await mockDb.query(text, params);
-    }
-
     throw error;
   } finally {
     if (client) {
@@ -251,7 +236,7 @@ export async function runMigrations() {
       executedResult.rows.map((row) => row.filename),
     );
 
-    // Читаем файлы миграций
+    // Читаем файлы миг��аций
     const migrationsDir = path.join(__dirname, "../../migrations");
     const migrationFiles = fs
       .readdirSync(migrationsDir)
@@ -320,7 +305,7 @@ export async function getDatabaseStats() {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("��� Ошибка получения статистики БД:", error.message);
+    console.error("❌ Ошибка получения статистики БД:", error.message);
     throw error;
   }
 }
