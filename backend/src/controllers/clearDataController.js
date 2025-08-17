@@ -6,20 +6,20 @@ export const clearAllData = async (req, res) => {
     
     // SQLite doesn't support replication role, skip this
     
-    // Clear in order of dependencies (using TRUNCATE for speed)
+    // Clear in order of dependencies (using DELETE for SQLite compatibility)
     const clearQueries = [
-      'TRUNCATE TABLE diagnostic_sessions RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE diagnostic_steps RESTART IDENTITY CASCADE;', 
-      'TRUNCATE TABLE problems RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE tv_interface_marks RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE tv_interfaces RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE devices RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE remotes RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE users RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE session_steps RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE step_actions RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE site_settings RESTART IDENTITY CASCADE;',
-      'TRUNCATE TABLE change_logs RESTART IDENTITY CASCADE;'
+      'DELETE FROM diagnostic_sessions;',
+      'DELETE FROM diagnostic_steps;',
+      'DELETE FROM problems;',
+      'DELETE FROM tv_interface_marks;',
+      'DELETE FROM tv_interfaces;',
+      'DELETE FROM devices;',
+      'DELETE FROM remotes;',
+      'DELETE FROM users;',
+      'DELETE FROM session_steps;',
+      'DELETE FROM step_actions;',
+      'DELETE FROM site_settings;',
+      'DELETE FROM change_logs;'
     ];
     
     const results = [];
