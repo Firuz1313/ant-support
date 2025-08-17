@@ -1,6 +1,7 @@
 import Problem from '../models/Problem.js';
 import Device from '../models/Device.js';
 import { problemValidation, validateRequest } from '../middleware/validateRequest.js';
+import { problemCreationValidation, validateRequest as newValidateRequest } from '../middleware/newValidation.js';
 import Joi from 'joi';
 
 const problemModel = new Problem();
@@ -11,7 +12,7 @@ const deviceModel = new Device();
  */
 class ProblemController {
   /**
-   * Получение спис��а проблем
+   * Получение списка проблем
    * GET /api/v1/problems
    */
   async getProblems(req, res, next) {
@@ -109,7 +110,7 @@ class ProblemController {
   }
 
   /**
-   * Создание новой ��роблемы
+   * Создание новой проблемы
    * POST /api/v1/problems
    */
   async createProblem(req, res, next) {
@@ -555,7 +556,7 @@ class ProblemController {
   }
 
   /**
-   * Обновление стати��тики проблемы
+   * Обновление статистики проблемы
    * POST /api/v1/problems/:id/update-stats
    */
   async updateProblemStats(req, res, next) {
@@ -659,8 +660,8 @@ const problemCreationSchema = Joi.object({
   metadata: Joi.object().unknown(true).optional()
 });
 
-// Применяем валидацию к методам
-const validateProblemCreation = validateRequest(problemCreationSchema);
+// Применяем НОВУЮ валидацию к методам
+const validateProblemCreation = newValidateRequest(problemCreationValidation);
 const validateProblemUpdate = validateRequest(problemValidation.update);
 
 // Экспортируем методы с примененной валидацией
