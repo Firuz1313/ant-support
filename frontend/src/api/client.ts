@@ -1,7 +1,5 @@
 import { APIResponse, PaginatedResponse, FilterOptions } from "../types";
 
-// Force recompilation - 2025-01-30
-
 export interface ApiClientConfig {
   baseUrl: string;
   timeout?: number;
@@ -44,16 +42,12 @@ export class ApiClient {
 
     // Check if baseUrl is absolute (starts with http)
     if (this.baseUrl.startsWith("http")) {
-      // Direct connection to backend
       fullUrl = `${this.baseUrl}${endpoint}`;
-      console.log(`🔗 Building direct URL: ${fullUrl}`);
     } else {
-      // Relative URL for proxy
       fullUrl = `${this.baseUrl}${endpoint}`;
       if (!fullUrl.startsWith("/")) {
         fullUrl = `/${fullUrl}`;
       }
-      console.log(`🔗 Building relative URL: ${fullUrl}`);
     }
 
     // Add query parameters if present
@@ -72,7 +66,7 @@ export class ApiClient {
       fullUrl = `${fullUrl}${separator}${searchParams.toString()}`;
     }
 
-    console.log(`✅ Final API URL: ${fullUrl}`);
+    console.log(`🚀 API Request: ${fullUrl}`);
     return fullUrl;
   }
 
@@ -83,213 +77,119 @@ export class ApiClient {
     const { params, timeout = this.timeout, ...fetchOptions } = options;
 
     const url = this.buildUrl(endpoint, params);
-    console.log(`🚀 Making ${fetchOptions.method || "GET"} request to: ${url}`);
+    console.log(`📡 ${fetchOptions.method || "GET"} ${url}`);
 
     const headers = {
       ...this.defaultHeaders,
       ...fetchOptions.headers,
     };
 
-    console.log(`📤 Request headers:`, headers);
-    console.log(`📤 Request method:`, fetchOptions.method || "GET");
-
-    // Log request body content for debugging
+    // Log request details
     if (fetchOptions.body) {
-      try {
-        const bodyData = JSON.parse(fetchOptions.body as string);
-        console.log(`📤 Request body:`, JSON.stringify(bodyData, null, 2));
-
-        // Warn about empty update objects that might cause issues
-        if (fetchOptions.method === 'PUT' && Object.keys(bodyData).length === 0) {
-          console.warn(`⚠️  Empty PUT request body - this might cause validation errors`);
-        }
-      } catch {
-        console.log(`📤 Request body (non-JSON):`, fetchOptions.body);
-      }
-    } else {
-      console.log(`📤 Request body: No body`);
+      console.log(`📤 Request body:`, fetchOptions.body);
     }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      console.log(`📡 Sending fetch request...`);
       const response = await fetch(url, {
         ...fetchOptions,
         headers,
         signal: controller.signal,
       });
 
-      console.log(`📡 Fetch completed with status: ${response.status}`);
       clearTimeout(timeoutId);
-
-      // Robust response reading with proper error handling
-      let responseData: any = null;
-      let responseText = "";
-      let bodyConsumed = false;
-
-      // Ultra-safe response body reading with multiple fallbacks
-      console.log(`📡 Starting response body reading...`);
       console.log(`📡 Response status: ${response.status}`);
-      console.log(`📡 Response ok: ${response.ok}`);
-      console.log(`📡 Response type: ${response.type}`);
-      console.log(`📡 Response redirected: ${response.redirected}`);
+
+      // Simple, single response reading approach
+      let responseText = "";
+      let responseData: any = null;
 
       try {
-        const contentType = response.headers.get('content-type') || '';
-        const contentLength = response.headers.get('content-length');
-
-        console.log(`📡 Response headers - Content-Type: ${contentType}, Content-Length: ${contentLength}`);
-        console.log(`📡 Response body used BEFORE reading: ${response.bodyUsed}`);
-
-        // Multiple safety checks before attempting to read
-        if (response.bodyUsed) {
-          console.warn(`📡 Response body already consumed - skipping read`);
-          responseText = "";
-          bodyConsumed = true;
-        } else if (response.body === null) {
-          console.warn(`📡 Response body is null - no content to read`);
-          responseText = "";
-          bodyConsumed = true;
+        // Only read if body hasn't been consumed
+        if (!response.bodyUsed) {
+          responseText = await response.text();
+          console.log(`📡 Response length: ${responseText.length}`);
+          
+          // Try to parse as JSON
+          if (responseText.trim()) {
+            try {
+              responseData = JSON.parse(responseText);
+              console.log(`📡 Parsed JSON response`);
+            } catch {
+              responseData = { message: responseText };
+              console.log(`📡 Non-JSON response`);
+            }
+          } else {
+            responseData = {};
+            console.log(`📡 Empty response`);
+          }
         } else {
-          console.log(`📡 Attempting to read response body...`);
-          try {
-            // Create a clone first to avoid consuming the original
-            const responseClone = response.clone();
-            responseText = await responseClone.text();
-            bodyConsumed = true;
-            console.log(
-              `📡 Successfully read response text (${responseText.length} chars): ${responseText.substring(0, 200)}`,
-            );
-          } catch (cloneError) {
-            console.warn(`�� Clone failed, trying direct read:`, cloneError);
-            // Fallback to direct read if clone fails
-            responseText = await response.text();
-            bodyConsumed = true;
-            console.log(
-              `📡 Direct read successful (${responseText.length} chars): ${responseText.substring(0, 200)}`,
-            );
-          }
+          console.warn(`📡 Response body already consumed`);
+          responseData = {};
         }
-
-        console.log(`📡 Response body used AFTER reading: ${response.bodyUsed}`);
-      } catch (textError) {
-        console.error(`📡 Failed to read response text:`, textError);
-        console.error(`📡 Error details:`, {
-          name: textError.name,
-          message: textError.message,
-          stack: textError.stack
-        });
-        // If reading fails, create safe fallback
-        responseText = "";
-        bodyConsumed = true;
+      } catch (readError) {
+        console.error(`📡 Response read error:`, readError);
+        responseData = {
+          error: "Failed to read response",
+          message: readError.message || "Unknown response reading error"
+        };
       }
 
-      // Try to parse JSON if we have text
-      if (responseText.trim()) {
-        try {
-          responseData = JSON.parse(responseText);
-          console.log(`📡 Successfully parsed JSON:`, responseData);
-        } catch (parseError) {
-          console.log(`📡 Not JSON, using as text`);
-          responseData = { message: responseText };
-        }
-      } else {
-        console.log(`📡 Empty response body`);
-        responseData = {};
-      }
-
-      // Check for HTTP errors AFTER reading the body
+      // Handle HTTP errors
       if (!response.ok) {
-        // Handle empty or malformed responses
+        console.error(`❌ HTTP Error ${response.status}`);
+        
+        // Create meaningful error data for empty responses
         if (!responseData || Object.keys(responseData).length === 0) {
-          console.warn(`📡 Empty error response for ${response.status}`);
-
-          // Try to create meaningful error based on status code
-          let defaultError = `HTTP ${response.status}`;
-          let defaultMessage = `Server returned ${response.status} without error details`;
-
-          if (response.status === 409) {
-            defaultError = "Conflict: Data already exists or violates constraints";
-            defaultMessage = "The requested operation conflicts with existing data";
-          } else if (response.status === 400) {
-            defaultError = "Bad Request: Invalid data provided";
-            defaultMessage = "The request contains invalid or missing data";
-          } else if (response.status === 404) {
-            defaultError = "Not Found: Resource does not exist";
-            defaultMessage = "The requested resource was not found";
-          } else if (response.status === 500) {
-            defaultError = "Internal Server Error";
-            defaultMessage = "An error occurred on the server";
-          }
-
           responseData = {
-            error: defaultError,
-            errorType: 'EMPTY_RESPONSE',
-            message: defaultMessage,
-            suggestion: 'Check server logs for more information',
+            error: `HTTP ${response.status}`,
+            message: `Server returned ${response.status}`,
             status: response.status
           };
+
+          // Add specific error messages for common status codes
+          switch (response.status) {
+            case 409:
+              responseData.error = "Conflict: Resource already exists or conflicts with current state";
+              responseData.message = "The request conflicts with existing data";
+              responseData.suggestion = "Check for duplicate names or constraint violations";
+              break;
+            case 400:
+              responseData.error = "Bad Request: Invalid data provided";
+              break;
+            case 404:
+              responseData.error = "Not Found: Resource does not exist";
+              break;
+            case 500:
+              responseData.error = "Internal Server Error";
+              break;
+          }
         }
 
-        const errorMessage =
-          responseData?.error ||
-          responseData?.message ||
-          `HTTP ${response.status}`;
-
-        // Special handling for different error types
+        // Detailed logging for 409 conflicts
         if (response.status === 409) {
-          console.error(`📡 ===== 409 CONFLICT ERROR DETAILS =====`);
-          console.error(`📡 Request URL: ${url}`);
-          console.error(`📡 Request Method: ${fetchOptions.method || 'GET'}`);
-          console.error(`📡 Request Body:`, fetchOptions.body || 'No body');
-          console.error(`📡 Response Status: ${response.status}`);
-          console.error(`📡 Response Headers:`, Object.fromEntries(response.headers.entries()));
-          console.error(`📡 Response Text Length: ${responseText.length}`);
-          console.error(`📡 Response Text: "${responseText}"`);
-          console.error(`📡 Parsed Response Data:`, JSON.stringify(responseData, null, 2));
-          console.error(`📡 Error Message: ${errorMessage}`);
-          console.error(`📡 Error Type:`, responseData?.errorType || 'CONFLICT');
-          console.error(`📡 Suggestion:`, responseData?.suggestion || 'Check for duplicate data or constraint violations');
-          console.error(`📡 ======================================`);
-
-          // Add context-specific conflict handling
-          if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
-            responseData.suggestion = 'Try using a different name or check for existing records';
-          }
-
-          // Ensure error type is set for 409
-          if (!responseData.errorType) {
-            responseData.errorType = 'CONFLICT';
-          }
-
-          // Add request context to error for better debugging
-          responseData.requestContext = {
-            url: url,
-            method: fetchOptions.method || 'GET',
-            body: fetchOptions.body,
-            timestamp: new Date().toISOString()
-          };
-        } else if (response.status >= 400) {
-          console.error(`📡 HTTP Error ${response.status}: ${errorMessage}`);
-          console.error(`📡 Full Error Response:`, JSON.stringify(responseData, null, 2));
-          console.error(`📡 Error Type:`, responseData?.errorType || 'HTTP_ERROR');
-          if (responseData?.details) {
-            console.error(`📡 Error Details:`, responseData.details);
-          }
+          console.error(`🔥 409 CONFLICT DEBUG INFO:`);
+          console.error(`   URL: ${url}`);
+          console.error(`   Method: ${fetchOptions.method}`);
+          console.error(`   Body: ${fetchOptions.body}`);
+          console.error(`   Response: ${responseText}`);
+          console.error(`   Parsed: ${JSON.stringify(responseData, null, 2)}`);
         }
 
+        const errorMessage = responseData?.error || responseData?.message || `HTTP ${response.status}`;
         throw new ApiError(
           `HTTP ${response.status}: ${errorMessage}`,
           response.status,
           responseData,
-          responseData?.errorType || 'HTTP_ERROR',
+          responseData?.errorType || 'HTTP_ERROR'
         );
       }
 
-      console.log(`✅ API call successful`);
+      console.log(`✅ Request successful`);
       return responseData;
+
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -298,23 +198,10 @@ export class ApiClient {
       }
 
       if (error instanceof Error) {
-        console.error(`📡 Request Error:`, error.message);
+        console.error(`❌ Request failed:`, error.message);
 
         if (error.name === "AbortError") {
           throw new ApiError("Request timeout", 408);
-        }
-
-        // Handle specific body stream errors
-        if (
-          error.message.includes("body stream") ||
-          error.message.includes("already read") ||
-          error.message.includes("body used")
-        ) {
-          console.error("📡 Body stream error detected:", error.message);
-          throw new ApiError("Response reading error - the response body was already consumed. Please try again.", 0, {
-            originalError: error.message,
-            errorType: 'BODY_STREAM_ERROR'
-          });
         }
 
         throw new ApiError(error.message, 0);
@@ -377,17 +264,9 @@ export class ApiClient {
   removeDefaultHeader(key: string): void {
     delete this.defaultHeaders[key];
   }
-
-  setAuthToken(token: string): void {
-    this.setDefaultHeader("Authorization", `Bearer ${token}`);
-  }
-
-  clearAuth(): void {
-    this.removeDefaultHeader("Authorization");
-  }
 }
 
-// Create default API client instance
+// Get API base URL
 const getApiBaseUrl = (): string => {
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
@@ -395,15 +274,14 @@ const getApiBaseUrl = (): string => {
 
     console.log("🌐 Current location:", window.location.href);
 
-    // В о��лачной среде fly.dev/builder.codes
+    // Cloud environment
     if (hostname.includes("builder.codes") || hostname.includes("fly.dev")) {
-      // Сначала пробуем proxy
       const proxyUrl = "/api";
-      console.log("🌩️ Cloud environment - trying proxy URL:", proxyUrl);
+      console.log("🌩️ Cloud environment - using proxy URL:", proxyUrl);
       return proxyUrl;
     }
 
-    // Локальн��я разработка - прямое подключение к бэкенду
+    // Local development
     if (hostname === "localhost" && port === "8080") {
       const directUrl = "http://localhost:3000/api";
       console.log("🏠 Local development - using direct connection:", directUrl);
@@ -417,40 +295,12 @@ const getApiBaseUrl = (): string => {
   return defaultUrl;
 };
 
-const API_BASE_URL = getApiBaseUrl();
-
-console.log("=== API Configuration ===");
-console.log("API Base URL:", API_BASE_URL);
-console.log("========================");
-
+// Create API client instance
 export const apiClient = new ApiClient({
-  baseUrl: API_BASE_URL,
+  baseUrl: getApiBaseUrl(),
   timeout: 30000,
 });
 
-// Helper functions for common API patterns
-export const createPaginatedRequest = (
-  page: number = 1,
-  limit: number = 20,
-  filters?: FilterOptions,
-) => {
-  return {
-    page,
-    limit,
-    ...filters,
-  };
-};
-
-export const handleApiError = (error: unknown): string => {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "An unexpected error occurred";
-};
+console.log("✅ API Client initialized");
 
 export default apiClient;
