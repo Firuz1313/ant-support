@@ -97,94 +97,47 @@ const AdminDashboard = () => {
   const handleSeedData = async () => {
     try {
       setIsLoading(true);
+      console.log('🌱 Starting manual data population...');
 
-      // Create test problems manually using the API client
-      const testProblems = [
-        {
-          device_id: "openbox",
-          title: "Нет сигнала",
-          description: "На экране телевизора отображается сообщение 'Нет сигнала' или черный экран",
-          category: "critical",
-          icon: "Monitor",
-          color: "from-red-500 to-red-600",
-          priority: 5,
-          estimated_time: 10,
-          difficulty: "beginner",
-          success_rate: 95,
-          status: "published"
+      // Try to call the test populate endpoint first
+      try {
+        const populateResponse = await fetch('/api/v1/test/populate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (populateResponse.ok) {
+          console.log('✅ Data populated successfully via test endpoint');
+          window.location.reload();
+          return;
+        }
+      } catch (e) {
+        console.log('⚠️ Test endpoint not available, trying manual creation...');
+      }
+
+      // Manual approach: create data using direct SQL via existing endpoints
+      const createProblemsResponse = await fetch('/api/v1/test-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          device_id: "openbox",
-          title: "Пульт не работает",
-          description: "Пульт дистанционного управления не реагирует на нажатие кнопок",
-          category: "moderate",
-          icon: "Radio",
-          color: "from-orange-500 to-orange-600",
-          priority: 3,
-          estimated_time: 5,
-          difficulty: "beginner",
-          success_rate: 90,
-          status: "published"
-        }
-      ];
+      });
 
-      // Try to create problems one by one
-      let successCount = 0;
-      for (const problem of testProblems) {
-        try {
-          const response = await fetch('/api/v1/problems', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(problem)
-          });
-
-          if (response.ok) {
-            successCount++;
-            console.log(`Created problem: ${problem.title}`);
-          } else {
-            const errorData = await response.json();
-            console.log(`Failed to create problem: ${problem.title}`, errorData);
-
-            // If validation error, try with a string ID
-            if (errorData.errorType === 'VALIDATION_ERROR' && errorData.details?.some(d => d.field === 'id')) {
-              try {
-                const problemWithId = { ...problem, id: `problem_${Date.now()}_${Math.random().toString(36).substr(2)}` };
-                const retryResponse = await fetch('/api/v1/problems', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(problemWithId)
-                });
-
-                if (retryResponse.ok) {
-                  successCount++;
-                  console.log(`Created problem with ID: ${problem.title}`);
-                } else {
-                  const retryError = await retryResponse.json();
-                  console.log(`Retry failed for problem: ${problem.title}`, retryError);
-                }
-              } catch (retryError) {
-                console.log(`Retry error for problem: ${problem.title}`, retryError);
-              }
-            }
-          }
-        } catch (error) {
-          console.log(`Error creating problem: ${problem.title}`, error);
-        }
-      }
-
-      if (successCount > 0) {
-        console.log(`Successfully created ${successCount} problems`);
-        // Refresh the page to show new data
+      if (createProblemsResponse.ok) {
+        console.log('✅ Data created successfully via test-data endpoint');
         window.location.reload();
-      } else {
-        console.log('No problems were created successfully');
+        return;
       }
+
+      // Fallback: show helpful message
+      console.log('❌ Could not create test data automatically');
+      alert('Не удалось создать тестовые данные автоматически. Валидация API блокирует создание проблем без ID, а проблемы должны использовать SERIAL auto-increment.');
+
     } catch (error) {
       console.error('Seed error:', error);
+      alert('Произошла ошибка при создании тестовых данных');
     } finally {
       setIsLoading(false);
     }
