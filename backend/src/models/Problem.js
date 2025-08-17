@@ -15,16 +15,13 @@ class Problem extends BaseModel {
   prepareForInsert(data) {
     const prepared = {
       ...data,
-      // Не генерируем ID для проблем - используем SERIAL
       created_at: this.createTimestamp(),
       updated_at: this.createTimestamp(),
       is_active: data.is_active !== undefined ? data.is_active : true
     };
 
-    // Удаляем ID если он был передан как пустой или null
-    if (!prepared.id) {
-      delete prepared.id;
-    }
+    // Всегда удаляем ID для проблем - используется SERIAL auto-increment
+    delete prepared.id;
 
     return prepared;
   }
@@ -162,7 +159,7 @@ class Problem extends BaseModel {
   }
 
   /**
-   * Получен��е проблем по устройству
+   * Получение ��роблем по устройству
    */
   async findByDevice(deviceId, options = {}) {
     try {
@@ -285,7 +282,7 @@ class Problem extends BaseModel {
         );
 
         if (originalResult.rows.length === 0) {
-          throw new Error('Проблема не найдена');
+          throw new Error('Пробле��а не найдена');
         }
 
         const original = originalResult.rows[0];
@@ -404,7 +401,7 @@ class Problem extends BaseModel {
       if (activeSessionsCount > 0) {
         return {
           canDelete: false,
-          reason: `Невозможно удалить проблему с ${activeSessionsCount} активными сессиями диагностики`
+          reason: `Невозможно удалить проблему с ${activeSessionsCount} активными сессиями диагнос��ики`
         };
       }
 
