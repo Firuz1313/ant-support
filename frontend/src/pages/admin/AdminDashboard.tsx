@@ -97,7 +97,7 @@ const AdminDashboard = () => {
   const handleSeedData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/v1/seed', {
+      const response = await fetch('/api/v1/test-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +109,8 @@ const AdminDashboard = () => {
         // Refresh the page to show new data
         window.location.reload();
       } else {
-        console.error('Failed to seed database');
+        const errorText = await response.text();
+        console.error('Failed to seed database:', errorText);
       }
     } catch (error) {
       console.error('Seed error:', error);
@@ -340,7 +341,7 @@ const AdminDashboard = () => {
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Файло��ое хранилище</span>
+                <span className="text-sm font-medium">Файловое хранилище</span>
                 <Badge variant="default" className="bg-green-600">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Работает
