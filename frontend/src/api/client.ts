@@ -128,23 +128,22 @@ export class ApiClient {
       let responseData: any = null;
       let responseText = "";
 
-      // Check if response body exists and can be read
-      const contentLength = response.headers.get('content-length');
-      const hasBody = contentLength && contentLength !== '0';
+      // Safely read response body with proper checks
+      try {
+        const contentType = response.headers.get('content-type') || '';
+        const contentLength = response.headers.get('content-length');
 
-      if (hasBody || !contentLength) {
-        try {
-          responseText = await response.text();
-          console.log(
-            `📡 Response text (${responseText.length} chars): ${responseText.substring(0, 100)}`,
-          );
-        } catch (textError) {
-          console.error(`📡 Failed to read response text:`, textError);
-          // Don't retry - this prevents the "already read" error
-          responseText = "";
-        }
-      } else {
-        console.log(`📡 Empty response body (Content-Length: ${contentLength})`);
+        console.log(`📡 Response headers - Content-Type: ${contentType}, Content-Length: ${contentLength}`);
+
+        // Always try to read the response body once, regardless of headers
+        // Some servers don't set proper content-length headers
+        responseText = await response.text();
+        console.log(
+          `📡 Response text (${responseText.length} chars): ${responseText.substring(0, 100)}`,
+        );
+      } catch (textError) {
+        console.error(`📡 Failed to read response text:`, textError);
+        // If reading fails, it's likely already consumed or there's a network issue
         responseText = "";
       }
 
