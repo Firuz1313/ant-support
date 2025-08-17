@@ -11,13 +11,14 @@ import {
   Sparkles,
   Heart,
 } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
 import { useState, useEffect } from "react";
+import { useDevices } from "@/hooks/useDevices";
+import { useProblemsByDevice } from "@/hooks/useProblems";
 
 const DeviceSelection = () => {
   const navigate = useNavigate();
-  const { getActiveDevices, getProblemsForDevice } = useData();
-  const devices = getActiveDevices();
+  const { data: devicesData, isLoading: devicesLoading } = useDevices(1, 50, { is_active: true });
+  const devices = devicesData?.data || [];
   const [animatedIcons, setAnimatedIcons] = useState<boolean[]>([]);
 
   useEffect(() => {
@@ -200,7 +201,7 @@ const DeviceSelection = () => {
 
                 <p className="text-gray-300 mb-6 text-lg leading-relaxed max-w-2xl mx-auto">
                   Наша команда экспертов всегда готова помочь вам решить любые
-                  проблемы с вашей ТВ-приставкой. Быстро, качественно,
+                  проблемы с вашей ТВ-пристав��ой. Быстро, качественно,
                   эффективно.
                 </p>
 
