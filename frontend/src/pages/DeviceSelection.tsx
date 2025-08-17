@@ -111,7 +111,8 @@ const DeviceSelection = () => {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {devices.map((device) => {
-                const problemsCount = getProblemsForDevice(device.id).length;
+                // Use problems count from device stats if available, otherwise default to 0
+                const problemsCount = device.problems_count || device.published_problems_count || 0;
 
                 return (
                   <Card
