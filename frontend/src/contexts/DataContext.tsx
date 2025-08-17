@@ -11,21 +11,21 @@ interface DataContextType {
   createDevice: (data: any) => Promise<any>;
   updateDevice: (id: string, data: any) => Promise<any>;
   deleteDevice: (id: string) => Promise<void>;
-  
+
   // Problems
   problems: any[];
   getProblemsForDevice: (deviceId: string) => any[];
   createProblem: (data: any) => Promise<any>;
   updateProblem: (id: string, data: any) => Promise<any>;
   deleteProblem: (id: string) => Promise<void>;
-  
+
   // Steps
   steps: any[];
   getStepsForProblem: (problemId: string) => any[];
   createStep: (data: any) => Promise<any>;
   updateStep: (id: string, data: any) => Promise<any>;
   deleteStep: (id: string) => Promise<void>;
-  
+
   // Remotes
   remotes: any[];
   getRemoteById: (id: string) => any;
@@ -37,10 +37,23 @@ interface DataContextType {
   createRemote: (data: any) => Promise<any>;
   updateRemote: (id: string, data: any) => Promise<any>;
   deleteRemote: (id: string) => Promise<void>;
-  
+
+  // Sessions
+  sessions: any[];
+  getActiveSessions: () => any[];
+  createSession: (data: any) => Promise<any>;
+  updateSession: (id: string, data: any) => Promise<any>;
+
+  // Change logs
+  changeLogs: any[];
+
   // Stats
   getEntityStats: (entity: string) => { total: number; active: number; inactive: number };
-  
+
+  // Data operations
+  refreshData: () => Promise<void>;
+  exportData: (options: any) => Promise<any>;
+
   // Settings
   siteSettings: any;
   updateSiteSettings: (settings: any) => Promise<any>;
