@@ -196,8 +196,17 @@ const DeviceManager = () => {
       setIsEditDialogOpen(false);
       setSelectedDevice(null);
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating device:", error);
+
+      // Show user-friendly error messages
+      if (error?.status === 409) {
+        alert("Конфликт: Устройство с таким названием уже существует или произошел другой конфликт данных.");
+      } else if (error?.status === 400) {
+        alert("Ошибка валидации: Проверьте правильность введенных данных.");
+      } else {
+        alert("Произошла ошибка при обновлении устройства. Попробуйте еще раз.");
+      }
     }
   };
 
@@ -478,7 +487,7 @@ const DeviceManager = () => {
                       size="sm"
                       onClick={() => handleToggleStatus(device.id)}
                       title={
-                        device.isActive ? "Д��акти��ировать" : "Активировать"
+                        device.isActive ? "Д��активировать" : "Активировать"
                       }
                     >
                       {device.isActive ? (
@@ -584,7 +593,7 @@ const DeviceManager = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-imageUrl">URL изо��ражения</Label>
+                <Label htmlFor="edit-imageUrl">URL изображения</Label>
                 <Input
                   id="edit-imageUrl"
                   value={formData.imageUrl}
