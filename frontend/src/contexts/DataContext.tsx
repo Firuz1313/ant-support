@@ -92,6 +92,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     createStep: async () => ({}),
     updateStep: async () => ({}),
     deleteStep: async () => {},
+    reorderSteps: async () => {},
 
     remotes: [],
     getRemoteById: () => null,
