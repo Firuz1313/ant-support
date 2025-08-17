@@ -91,6 +91,7 @@ export class ApiClient {
     };
 
     console.log(`📤 Request headers:`, headers);
+<<<<<<< HEAD
     console.log(`📤 Request method:`, fetchOptions.method || "GET");
 
     // Log request body content for debugging
@@ -110,6 +111,11 @@ export class ApiClient {
       console.log(`📤 Request body: No body`);
     }
 
+=======
+    console.log(`📤 Request body:`, fetchOptions.body ? "Has body" : "No body");
+    console.log(`📤 Request method:`, fetchOptions.method || "GET");
+
+>>>>>>> refs/remotes/origin/main
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -124,6 +130,7 @@ export class ApiClient {
       console.log(`📡 Fetch completed with status: ${response.status}`);
       clearTimeout(timeoutId);
 
+<<<<<<< HEAD
       // Robust response reading with proper error handling
       let responseData: any = null;
       let responseText = "";
@@ -184,24 +191,47 @@ export class ApiClient {
         // If reading fails, create safe fallback
         responseText = "";
         bodyConsumed = true;
+=======
+      // Ultra-simple approach: read response only once, immediately
+      let responseData: any = null;
+      let responseText = "";
+
+      try {
+        responseText = await response.text();
+        console.log(
+          `📡 Response text (first 100 chars): ${responseText.substring(0, 100)}`,
+        );
+      } catch (textError) {
+        console.error(`📡 Failed to read response text:`, textError);
+        responseText = "";
+>>>>>>> refs/remotes/origin/main
       }
 
       // Try to parse JSON if we have text
       if (responseText.trim()) {
         try {
           responseData = JSON.parse(responseText);
+<<<<<<< HEAD
           console.log(`📡 Successfully parsed JSON:`, responseData);
+=======
+          console.log(`📡 Successfully parsed JSON`);
+>>>>>>> refs/remotes/origin/main
         } catch (parseError) {
           console.log(`📡 Not JSON, using as text`);
           responseData = { message: responseText };
         }
       } else {
+<<<<<<< HEAD
         console.log(`📡 Empty response body`);
+=======
+        console.log(`📡 Empty response`);
+>>>>>>> refs/remotes/origin/main
         responseData = {};
       }
 
       // Check for HTTP errors AFTER reading the body
       if (!response.ok) {
+<<<<<<< HEAD
         // Handle empty or malformed responses
         if (!responseData || Object.keys(responseData).length === 0) {
           console.warn(`📡 Empty error response for ${response.status}`);
@@ -233,10 +263,13 @@ export class ApiClient {
           };
         }
 
+=======
+>>>>>>> refs/remotes/origin/main
         const errorMessage =
           responseData?.error ||
           responseData?.message ||
           `HTTP ${response.status}`;
+<<<<<<< HEAD
 
         // Special handling for different error types
         if (response.status === 409) {
@@ -280,11 +313,17 @@ export class ApiClient {
           }
         }
 
+=======
+        console.error(`📡 HTTP Error ${response.status}: ${errorMessage}`);
+>>>>>>> refs/remotes/origin/main
         throw new ApiError(
           `HTTP ${response.status}: ${errorMessage}`,
           response.status,
           responseData,
+<<<<<<< HEAD
           responseData?.errorType || 'HTTP_ERROR',
+=======
+>>>>>>> refs/remotes/origin/main
         );
       }
 
@@ -307,6 +346,7 @@ export class ApiClient {
         // Handle specific body stream errors
         if (
           error.message.includes("body stream") ||
+<<<<<<< HEAD
           error.message.includes("already read") ||
           error.message.includes("body used")
         ) {
@@ -315,6 +355,11 @@ export class ApiClient {
             originalError: error.message,
             errorType: 'BODY_STREAM_ERROR'
           });
+=======
+          error.message.includes("already read")
+        ) {
+          throw new ApiError("Response reading error - please try again", 0);
+>>>>>>> refs/remotes/origin/main
         }
 
         throw new ApiError(error.message, 0);
@@ -395,7 +440,11 @@ const getApiBaseUrl = (): string => {
 
     console.log("🌐 Current location:", window.location.href);
 
+<<<<<<< HEAD
     // В о��лачной среде fly.dev/builder.codes
+=======
+    // В облачной среде fly.dev/builder.codes
+>>>>>>> refs/remotes/origin/main
     if (hostname.includes("builder.codes") || hostname.includes("fly.dev")) {
       // Сначала пробуем proxy
       const proxyUrl = "/api";

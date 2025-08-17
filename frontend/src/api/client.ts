@@ -270,8 +270,21 @@ export class ApiClient {
   }
 }
 
+<<<<<<< HEAD
 // Get API base URL
+=======
+// Create default API client instance using environment variable
+>>>>>>> refs/remotes/origin/main
 const getApiBaseUrl = (): string => {
+  // Приоритет для переменной окружения
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  if (envUrl) {
+    console.log("🔗 Using environment API URL:", envUrl);
+    return envUrl;
+  }
+
+  // Fallback для разных сред
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     const port = window.location.port;
@@ -285,10 +298,14 @@ const getApiBaseUrl = (): string => {
       return proxyUrl;
     }
 
+<<<<<<< HEAD
     // Local development
+=======
+    // Локальная разработка - прямое подключение к бэкенду
+>>>>>>> refs/remotes/origin/main
     if (hostname === "localhost" && port === "8080") {
       const directUrl = "http://localhost:3000/api";
-      console.log("🏠 Local development - using direct connection:", directUrl);
+      console.log("🏠 Local development - direct connection:", directUrl);
       return directUrl;
     }
   }
@@ -299,7 +316,17 @@ const getApiBaseUrl = (): string => {
   return defaultUrl;
 };
 
+<<<<<<< HEAD
 // Create API client instance
+=======
+const API_BASE_URL = getApiBaseUrl();
+
+console.log("=== API Configuration ===");
+console.log("API Base URL:", API_BASE_URL);
+console.log("Environment URL:", import.meta.env.VITE_API_BASE_URL);
+console.log("========================");
+
+>>>>>>> refs/remotes/origin/main
 export const apiClient = new ApiClient({
   baseUrl: getApiBaseUrl(),
   timeout: 30000,

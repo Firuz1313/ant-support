@@ -3,10 +3,13 @@ import {
   deviceValidation,
   validateRequest,
 } from "../middleware/validateRequest.js";
+<<<<<<< HEAD
 import {
   deviceCreationValidation,
   validateRequest as newValidateRequest,
 } from "../middleware/newValidation.js";
+=======
+>>>>>>> refs/remotes/origin/main
 
 const deviceModel = new Device();
 
@@ -44,6 +47,7 @@ class DeviceController {
         sortOrder: order.toUpperCase(),
       };
 
+<<<<<<< HEAD
       let devices;
       if (admin === "true") {
         // Для админ панели - расширенная информация
@@ -55,8 +59,19 @@ class DeviceController {
         // Обычный список
         devices = await deviceModel.findAll(filters, options);
       }
+=======
+      // Прямые вызовы к БД - fail-fast при ошибках
+      const devices = await (async () => {
+        if (admin === "true") {
+          return await deviceModel.getForAdmin(filters, options);
+        } else if (include_stats === "true") {
+          return await deviceModel.findAllWithStats(filters, options);
+        } else {
+          return await deviceModel.findAll(filters, options);
+        }
+      })();
+>>>>>>> refs/remotes/origin/main
 
-      // Подсчет общего количества для пагинации
       const total = await deviceModel.count(filters);
       const totalPages = Math.ceil(total / options.limit);
 
@@ -237,7 +252,7 @@ class DeviceController {
         // Жесткое удаление (осторожно!)
         deletedDevice = await deviceModel.delete(id);
       } else {
-        // Мягкое удаление
+        // Мягкое уда��ение
         deletedDevice = await deviceModel.softDelete(id);
       }
 
@@ -460,7 +475,11 @@ class DeviceController {
         // Другие ф��рматы можно добавить позже (CSV, XML и т.д.)
         res.status(400).json({
           success: false,
+<<<<<<< HEAD
           error: "Неподдерживаемый формат экспор��а",
+=======
+          error: "Неподдерживаемый формат экспорта",
+>>>>>>> refs/remotes/origin/main
           supportedFormats: ["json"],
           timestamp: new Date().toISOString(),
         });
@@ -515,7 +534,7 @@ const validateDeviceCreation = validateRequest(deviceValidation.create);
 const validateDeviceCreationNew = newValidateRequest(deviceCreationValidation);
 const validateDeviceUpdate = validateRequest(deviceValidation.update);
 
-// Экспортируем методы с примененной валидацией
+// Экспортируем методы с примен��нной валидацией
 export const getDevices = deviceController.getDevices.bind(deviceController);
 export const getDeviceById =
   deviceController.getDeviceById.bind(deviceController);
@@ -523,10 +542,13 @@ export const createDevice = [
   validateDeviceCreation,
   deviceController.createDevice.bind(deviceController),
 ];
+<<<<<<< HEAD
 export const createDeviceNewWithValidation = [
   validateDeviceCreationNew,
   createDeviceNew,
 ];
+=======
+>>>>>>> refs/remotes/origin/main
 export const updateDevice = [
   validateDeviceUpdate,
   deviceController.updateDevice.bind(deviceController),
