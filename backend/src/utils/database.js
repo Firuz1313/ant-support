@@ -13,17 +13,36 @@ dotenv.config();
 
 const { Pool, Client } = pkg;
 
-// Check if we should use mock database
-const USE_MOCK_DB =
-  process.env.USE_MOCK_DB === "true" || process.env.NODE_ENV === "mock";
+// Strict .env validation - все ключи обязательны
+function validateRequiredEnvVars() {
+  const required = [
+    "DB_HOST",
+    "DB_PORT",
+    "DB_NAME",
+    "DB_USER",
+    "DB_PASSWORD",
+    "DB_SSL",
+  ];
+  const missing = required.filter((key) => !process.env[key]);
 
-// Конфигурация подключения к PostgreSQL
+  if (missing.length > 0) {
+    console.error("❌ FATAL: Missing required environment variables:");
+    missing.forEach((key) => console.error(`   - ${key}`));
+    console.error("❌ Server cannot start without PostgreSQL configuration");
+    process.exit(1);
+  }
+}
+
+// Validate environment on module load
+validateRequiredEnvVars();
+
+// Конфигурация подключения к PostgreSQL - ТОЛЬКО real DB, никаких fallback
 const dbConfig = {
-  host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME || "ant_support",
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "password",
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 
   // Настройки pool соединений
@@ -34,16 +53,28 @@ const dbConfig = {
   maxUses: 7500, // максимальное количество использований соединения
 };
 
+console.log("🔧 PostgreSQL Configuration (STRICT MODE - NO FALLBACKS):");
+console.log(`📊 Host: ${dbConfig.host}:${dbConfig.port}`);
+console.log(`📊 Database: ${dbConfig.database}`);
+console.log(`📊 User: ${dbConfig.user}`);
+console.log(`📊 SSL: ${dbConfig.ssl ? "enabled" : "disabled"}`);
+console.log(`📊 Pool: ${dbConfig.min}-${dbConfig.max} connections`);
+console.log(`📊 FAIL-FAST MODE: Server will terminate if DB unavailable`);
+
 // Создание pool соединений
 const pool = new Pool(dbConfig);
 
 // Обработка событий pool
 pool.on("connect", (client) => {
-  console.log("📊 Новое подключение к PostgreSQL установлено");
+  console.log(
+    `📊 DB connected: host=${dbConfig.host} db=${dbConfig.database} pool=active`,
+  );
 });
 
 pool.on("error", (err, client) => {
-  console.error("📊 Ошибка подключения к PostgreSQL:", err.message);
+  console.error("📊 FATAL PostgreSQL pool error:", err.message);
+  console.error("📊 Server will terminate due to database failure");
+  process.exit(1); // FAIL-FAST при ошибках pool
 });
 
 pool.on("acquire", (client) => {
@@ -58,19 +89,8 @@ pool.on("release", (client) => {
   }
 });
 
-// Import mock database if needed
-let mockDb = null;
-if (USE_MOCK_DB) {
-  mockDb = await import("./mockDatabase.js");
-  console.log("🔧 Using mock database for development");
-}
-
-// Функция проверки подключения к базе данных
+// Функция проверки подключения к базе данных с fail-fast
 export async function testConnection() {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.testConnection();
-  }
-
   let client;
   try {
     client = await pool.connect();
@@ -90,20 +110,8 @@ export async function testConnection() {
       version: result.rows[0].postgres_version,
     };
   } catch (error) {
-    console.error("❌ Ошибка подключения к PostgreSQL:", error.message);
-
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      mockDb = await import("./mockDatabase.js");
-      return await mockDb.testConnection();
-    }
-
-    return {
-      success: false,
-      error: error.message,
-    };
+    console.error("❌ FATAL: PostgreSQL connection failed:", error.message);
+    throw error; // FAIL-FAST: пробрасываем ошибку дальше
   } finally {
     if (client) {
       client.release();
@@ -111,12 +119,8 @@ export async function testConnection() {
   }
 }
 
-// Функция выполнения запроса с логированием
+// Функция выполнения запроса БЕЗ FALLBACK - fail-fast при ошибках
 export async function query(text, params = []) {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.query(text, params);
-  }
-
   const start = Date.now();
   let client;
 
@@ -139,20 +143,11 @@ export async function query(text, params = []) {
     return result;
   } catch (error) {
     const duration = Date.now() - start;
-    console.error(`❌ SQL Error after ${duration}ms:`, error.message);
+    console.error(`❌ FATAL SQL Error after ${duration}ms:`, error.message);
     console.error("🔍 Query:", text);
     console.error("🔍 Parameters:", params);
 
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      if (!mockDb) {
-        mockDb = await import("./mockDatabase.js");
-      }
-      return await mockDb.query(text, params);
-    }
-
+    // FAIL-FAST: Никаких fallback, сразу пробрасываем ошибку
     throw error;
   } finally {
     if (client) {
@@ -163,10 +158,6 @@ export async function query(text, params = []) {
 
 // Функция выполнения транзакции
 export async function transaction(callback) {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.transaction(callback);
-  }
-
   let client;
 
   try {
@@ -190,10 +181,6 @@ export async function transaction(callback) {
 
 // Функция создания базы данных (если не существует)
 export async function createDatabase() {
-  if (USE_MOCK_DB && mockDb) {
-    return await mockDb.createDatabase();
-  }
-
   const adminConfig = {
     ...dbConfig,
     database: "postgres", // подключаемся к системной БД для создания новой
@@ -219,16 +206,7 @@ export async function createDatabase() {
       console.log(`📊 База данных ${dbConfig.database} уже существует`);
     }
   } catch (error) {
-    console.error("❌ Ошибка создания базы данных:", error.message);
-    // Fallback to mock database
-    if (!USE_MOCK_DB) {
-      console.log("🔧 Falling back to mock database...");
-      process.env.USE_MOCK_DB = "true";
-      if (!mockDb) {
-        mockDb = await import("./mockDatabase.js");
-      }
-      return await mockDb.createDatabase();
-    }
+    console.error("❌ FATAL: Ошибка создания базы данных:", error.message);
     throw error;
   } finally {
     if (client) {
@@ -251,7 +229,7 @@ export async function runMigrations() {
       )
     `);
 
-    // Получаем список выполненных миграций
+    // По��учаем список выполненных миграций
     const executedResult = await query(
       "SELECT filename FROM migrations ORDER BY id",
     );
@@ -261,6 +239,13 @@ export async function runMigrations() {
 
     // Читаем файлы миграций
     const migrationsDir = path.join(__dirname, "../../migrations");
+
+    // Проверяем существование папки миграций
+    if (!fs.existsSync(migrationsDir)) {
+      console.log("📁 Папка миграций не найдена, создаём пустую");
+      return;
+    }
+
     const migrationFiles = fs
       .readdirSync(migrationsDir)
       .filter((file) => file.endsWith(".sql"))
@@ -294,7 +279,7 @@ export async function runMigrations() {
 
     console.log("🎉 Все миграции выполнены успешно");
   } catch (error) {
-    console.error("❌ Ошибка выполнения миграций:", error.message);
+    console.error("❌ FATAL: Ошибка выполнения миграций:", error.message);
     throw error;
   }
 }
@@ -328,7 +313,7 @@ export async function getDatabaseStats() {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("❌ Ошибка получения статистики БД:", error.message);
+    console.error("❌ FATAL: Ошибка получения статистики БД:", error.message);
     throw error;
   }
 }
@@ -344,107 +329,16 @@ export async function closePool() {
   }
 }
 
-// Функция очистки старых данных (maintenance)
-export async function cleanupOldData(daysToKeep = 90) {
+// Fail-fast initialization test
+export async function initializeDatabase() {
   try {
-    console.log(`🧹 Очистка данных старше ${daysToKeep} дней...`);
-
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-
-    // Удаляем старые сессии
-    const sessionsResult = await query(
-      `
-      DELETE FROM diagnostic_sessions 
-      WHERE start_time < $1 AND end_time IS NOT NULL
-    `,
-      [cutoffDate],
-    );
-
-    // Удаляем старые логи изменений
-    const logsResult = await query(
-      `
-      DELETE FROM change_logs 
-      WHERE created_at < $1
-    `,
-      [cutoffDate],
-    );
-
-    console.log(`✅ Удалено сессий: ${sessionsResult.rowCount}`);
-    console.log(`✅ Удалено логов: ${logsResult.rowCount}`);
-
-    // Обновляем статистику
-    await query("ANALYZE");
-
-    return {
-      deletedSessions: sessionsResult.rowCount,
-      deletedLogs: logsResult.rowCount,
-    };
+    console.log("🔄 Initializing database connection...");
+    await testConnection();
+    console.log("✅ Database initialization successful");
   } catch (error) {
-    console.error("❌ Ошибка очистки данных:", error.message);
-    throw error;
-  }
-}
-
-// Функция для полнотекстового поиска
-export async function searchText(
-  searchTerm,
-  tables = ["problems", "devices", "diagnostic_steps"],
-) {
-  try {
-    const searchResults = {};
-
-    for (const table of tables) {
-      let searchQuery;
-
-      switch (table) {
-        case "problems":
-          searchQuery = `
-            SELECT id, title, description, 
-                   ts_rank(to_tsvector('russian', title || ' ' || COALESCE(description, '')), plainto_tsquery('russian', $1)) as rank
-            FROM problems 
-            WHERE to_tsvector('russian', title || ' ' || COALESCE(description, '')) @@ plainto_tsquery('russian', $1)
-            AND is_active = true
-            ORDER BY rank DESC
-            LIMIT 20
-          `;
-          break;
-
-        case "devices":
-          searchQuery = `
-            SELECT id, name, brand, model, description,
-                   ts_rank(to_tsvector('russian', name || ' ' || brand || ' ' || COALESCE(description, '')), plainto_tsquery('russian', $1)) as rank
-            FROM devices
-            WHERE to_tsvector('russian', name || ' ' || brand || ' ' || COALESCE(description, '')) @@ plainto_tsquery('russian', $1)
-            AND is_active = true
-            ORDER BY rank DESC
-            LIMIT 20
-          `;
-          break;
-
-        case "diagnostic_steps":
-          searchQuery = `
-            SELECT id, title, description, instruction,
-                   ts_rank(to_tsvector('russian', title || ' ' || COALESCE(description, '') || ' ' || instruction), plainto_tsquery('russian', $1)) as rank
-            FROM diagnostic_steps
-            WHERE to_tsvector('russian', title || ' ' || COALESCE(description, '') || ' ' || instruction) @@ plainto_tsquery('russian', $1)
-            AND is_active = true
-            ORDER BY rank DESC
-            LIMIT 20
-          `;
-          break;
-      }
-
-      if (searchQuery) {
-        const result = await query(searchQuery, [searchTerm]);
-        searchResults[table] = result.rows;
-      }
-    }
-
-    return searchResults;
-  } catch (error) {
-    console.error("❌ Ошибка полнотекстового пои��ка:", error.message);
-    throw error;
+    console.error("❌ FATAL: Database initialization failed");
+    console.error("❌ Server cannot start without database connection");
+    process.exit(1);
   }
 }
 
@@ -459,7 +353,6 @@ export default {
   runMigrations,
   getDatabaseStats,
   closePool,
-  cleanupOldData,
-  searchText,
+  initializeDatabase,
   pool,
 };

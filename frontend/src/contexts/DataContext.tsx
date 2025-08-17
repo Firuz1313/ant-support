@@ -45,13 +45,32 @@ class APIService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
+        console.warn(`API Warning [${endpoint}]:`, errorMessage);
+
+        // Возвращаем стандартный failed response вместо throw
+        return {
+          success: false,
+          error: errorMessage,
+          data: undefined as any,
+        };
       }
 
       return data;
     } catch (error) {
-      console.error(`API Error [${endpoint}]:`, error);
-      throw error;
+      console.warn(
+        `API Warning [${endpoint}]:`,
+        error instanceof Error ? error.message : "Unknown error",
+      );
+
+      // Возвращаем стандартный failed response
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Network or parsing error",
+        data: undefined as any,
+      };
     }
   }
 
@@ -161,7 +180,7 @@ const defaultSiteSettings: SiteSettings = {
   id: "settings",
   siteName: "ANT Support",
   siteDescription:
-    "Профессиональ��ая платформа для диагностики цифр��вых ТВ-приставок",
+    "Профессиональ��ая платформа для ��иагностики цифр��вых ТВ-приставок",
   defaultLanguage: "ru",
   supportedLanguages: ["ru", "tj", "uz"],
   theme: "professional",
@@ -357,66 +376,17 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // Error states
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Data states
-  const [devices, setDevices] = useState<Device[]>(() => {
-    const stored = localStorage.getItem("ant-support-devices");
-    return stored ? JSON.parse(stored) : defaultDevices;
-  });
-
-  const [problems, setProblems] = useState<Problem[]>(() => {
-    const stored = localStorage.getItem("ant-support-problems");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [steps, setSteps] = useState<Step[]>(() => {
-    const stored = localStorage.getItem("ant-support-steps");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [remotes, setRemotes] = useState<Remote[]>(() => {
-    const stored = localStorage.getItem("ant-support-remotes");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [stepActions, setStepActions] = useState<StepAction[]>(() => {
-    const stored = localStorage.getItem("ant-support-step-actions");
-    return stored ? JSON.parse(stored) : [];
-  });
+  // Data states - no localStorage caching, all data from API
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [remotes, setRemotes] = useState<Remote[]>([]);
+  const [stepActions, setStepActions] = useState<StepAction[]>([]);
 
   const [sessions, setSessions] = useState<DiagnosticSession[]>([]);
   const [changeLogs, setChangeLogs] = useState<ChangeLog[]>([]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
-    const stored = localStorage.getItem("ant-support-settings");
-    return stored ? JSON.parse(stored) : defaultSiteSettings;
-  });
-
-  // Persistence effects
-  useEffect(() => {
-    localStorage.setItem("ant-support-devices", JSON.stringify(devices));
-  }, [devices]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-problems", JSON.stringify(problems));
-  }, [problems]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-steps", JSON.stringify(steps));
-  }, [steps]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-remotes", JSON.stringify(remotes));
-  }, [remotes]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "ant-support-step-actions",
-      JSON.stringify(stepActions),
-    );
-  }, [stepActions]);
-
-  useEffect(() => {
-    localStorage.setItem("ant-support-settings", JSON.stringify(siteSettings));
-  }, [siteSettings]);
+  const [siteSettings, setSiteSettings] =
+    useState<SiteSettings>(defaultSiteSettings);
 
   // Helper functions
   const generateId = () => {
@@ -1017,7 +987,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       if (usageCount > 0) {
         return {
           canDelete: false,
-          reason: `Пульт используется в ${usageCount} шагах диагностики`,
+          reason: `П��льт используется в ${usageCount} шагах диагностики`,
         };
       }
 
@@ -1287,18 +1257,96 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   // Utility operations
   const refreshData = useCallback(async (): Promise<void> => {
-    console.log("Refreshing data...");
-  }, []);
+    console.log("Refreshing all data from API...");
+
+    try {
+      // Загружаем все доступные эндпоинты
+      const [devicesResult, problemsResult, stepsResult, remotesResult] =
+        await Promise.allSettled([
+          api.getAll<Device>("devices"),
+          api.getAll<Problem>("problems"),
+          api.getAll<Step>("steps"),
+          api.getAll<Remote>("remotes"),
+        ]);
+
+      if (devicesResult.status === "fulfilled" && devicesResult.value.success) {
+        setDevices(devicesResult.value.data || []);
+        console.log(
+          "✅ Devices loaded from API:",
+          devicesResult.value.data?.length,
+        );
+      } else {
+        console.warn("⚠️ Could not load devices (server error or no database)");
+        setDevices([]); // Уст��навливаем пустой массив при ошибке
+      }
+
+      if (
+        problemsResult.status === "fulfilled" &&
+        problemsResult.value.success
+      ) {
+        setProblems(problemsResult.value.data || []);
+        console.log(
+          "✅ Problems loaded from API:",
+          problemsResult.value.data?.length,
+        );
+      } else {
+        console.warn(
+          "⚠️ Could not load problems (server error or no database)",
+        );
+        setProblems([]);
+      }
+
+      if (stepsResult.status === "fulfilled" && stepsResult.value.success) {
+        setSteps(stepsResult.value.data || []);
+        console.log(
+          "✅ Steps loaded from API:",
+          stepsResult.value.data?.length,
+        );
+      } else {
+        console.warn("⚠️ Could not load steps (server error or no database)");
+        setSteps([]);
+      }
+
+      if (remotesResult.status === "fulfilled" && remotesResult.value.success) {
+        setRemotes(remotesResult.value.data || []);
+        console.log(
+          "✅ Remotes loaded from API:",
+          remotesResult.value.data?.length,
+        );
+      } else {
+        console.warn("⚠️ Could not load remotes (placeholder endpoint)");
+        setRemotes([]);
+      }
+    } catch (error) {
+      console.error("❌ Error refreshing data:", error);
+      // При полной ошибке устанавливаем пустые массивы
+      setDevices([]);
+      setProblems([]);
+      setSteps([]);
+      setRemotes([]);
+    }
+  }, [api]);
+
+  // Загружаем данные при монтировании компонента
+  useEffect(() => {
+    // Добавляем небольшую задержку чтобы дать время API подключиться
+    const timer = setTimeout(() => {
+      refreshData();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [refreshData]);
 
   const clearCache = useCallback((): void => {
-    localStorage.clear();
-    setDevices(defaultDevices);
+    // No localStorage caching anymore - refresh data from API
+    setDevices([]);
     setProblems([]);
     setSteps([]);
     setRemotes([]);
     setStepActions([]);
     setSiteSettings(defaultSiteSettings);
-  }, []);
+    refreshData(); // Reload from API
+  }, [refreshData]);
 
   const getEntityStats = useCallback(
     (entity: string) => {
