@@ -173,7 +173,7 @@ class DeviceController {
         if (duplicateDevice && String(duplicateDevice.id) !== String(id)) {
           return res.status(409).json({
             success: false,
-            error: 'Устройство с таким название�� уже существует',
+            error: 'Устройство с таким названием уже существует',
             errorType: 'DUPLICATE_ERROR',
             timestamp: new Date().toISOString()
           });
@@ -398,7 +398,7 @@ class DeviceController {
         if (!update.id || !update.data) {
           return res.status(400).json({
             success: false,
-            error: 'Каждое обновление должно сод��ржать id и data',
+            error: 'Каждое обновление должно содержать id и data',
             errorType: 'VALIDATION_ERROR',
             timestamp: new Date().toISOString()
           });
@@ -446,10 +446,10 @@ class DeviceController {
           }
         });
       } else {
-        // Другие форматы можно добавить позже (CSV, XML и т.д.)
+        // Другие ф��рматы можно добавить позже (CSV, XML и т.д.)
         res.status(400).json({
           success: false,
-          error: 'Неподдерживаемый формат экспорта',
+          error: 'Неподдерживаемый формат экспор��а',
           supportedFormats: ['json'],
           timestamp: new Date().toISOString()
         });
@@ -463,8 +463,45 @@ class DeviceController {
 // Создаем экземпляр контроллера
 const deviceController = new DeviceController();
 
+/**
+ * Создание устройства без валидации ID (новое решение для SERIAL ID)
+ */
+export const createDeviceNew = async (req, res, next) => {
+  try {
+    console.log('🆕 Creating device with new validation');
+    const deviceData = req.body;
+
+    // Проверяем уникальность названия для активных устройств
+    const existingDevice = await deviceModel.findOne({
+      name: deviceData.name,
+      is_active: true
+    });
+
+    if (existingDevice) {
+      return res.status(409).json({
+        success: false,
+        error: 'Устройство с таким названием уже существует',
+        errorType: 'DUPLICATE_ERROR',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const newDevice = await deviceModel.create(deviceData);
+
+    res.status(201).json({
+      success: true,
+      data: newDevice,
+      message: 'Устройство успешно создано',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Применяем валидацию к методам
 const validateDeviceCreation = validateRequest(deviceValidation.create);
+const validateDeviceCreationNew = newValidateRequest(deviceCreationValidation);
 const validateDeviceUpdate = validateRequest(deviceValidation.update);
 
 // Экспортируем методы с примененной валидацией
