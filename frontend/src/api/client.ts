@@ -270,9 +270,9 @@ export class ApiClient {
   }
 }
 
-// Get API base URL
+// Get API base URL with improved cloud environment handling
 const getApiBaseUrl = (): string => {
-  // Приоритет для переменной окружения
+  // Priority for environment variable
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   
   if (envUrl) {
@@ -280,18 +280,22 @@ const getApiBaseUrl = (): string => {
     return envUrl;
   }
 
-  // Fallback для разных сред
+  // Environment detection
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     const port = window.location.port;
 
     console.log("🌐 Current location:", window.location.href);
 
-    // Cloud environment
+    // Cloud environment (fly.dev, builder.codes)
     if (hostname.includes("builder.codes") || hostname.includes("fly.dev")) {
-      const proxyUrl = "/api";
-      console.log("🌩️ Cloud environment - using proxy URL:", proxyUrl);
-      return proxyUrl;
+      console.log("🌩️ Cloud environment detected");
+      
+      // For development, return mock data endpoints
+      // TODO: Replace with actual deployed backend URL
+      const mockUrl = "/api";
+      console.log("🔧 Using mock API for cloud development:", mockUrl);
+      return mockUrl;
     }
 
     // Local development
@@ -315,6 +319,7 @@ console.log("=== API Configuration ===");
 console.log("API Base URL:", API_BASE_URL);
 console.log("Environment URL:", import.meta.env.VITE_API_BASE_URL);
 console.log("========================");
+
 export const apiClient = new ApiClient({
   baseUrl: getApiBaseUrl(),
   timeout: 30000,
