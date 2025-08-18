@@ -258,7 +258,7 @@ export class StaticApiService {
       "device_id": "dev1", 
       "step_number": 1,
       "title": "Проверьте кабели",
-      "description": "Убедитесь, что все кабели подключены правильно",
+      "description": "Убедитесь, что ��се кабели подключены правильно",
       "instruction": "Проверьте HDMI/AV кабели между приставкой и телевизором",
       "estimated_time": 60,
       "is_active": true,
@@ -322,7 +322,7 @@ export class StaticApiService {
       "problem_id": "prob5",
       "device_id": "dev4",
       "step_number": 1,
-      "title": "Замените батарейки",
+      "title": "Заме��ите батарейки",
       "description": "Проверьте и замените батарейки в пульте",
       "instruction": "Откройте отсек для батареек и установите новые",
       "estimated_time": 15,
@@ -376,7 +376,7 @@ export class StaticApiService {
       "step_number": 3,
       "title": "Проверьте источник сигнала",
       "description": "Убедитесь, что выбран правильный источник", 
-      "instruction": "Перек��ючите телевизор на правильный вход (HDMI1, HDMI2, AV)",
+      "instruction": "Переключите телевизор на правильный вход (HDMI1, HDMI2, AV)",
       "estimated_time": 30,
       "is_active": true,
       "created_at": "2025-08-18T10:00:00Z",
@@ -558,6 +558,74 @@ export class StaticApiService {
       "is_active": true,
       "created_at": "2025-08-18T16:00:00Z",
       "updated_at": "2025-08-18T16:00:00Z"
+    }
+  ];
+
+  private static tvInterfaces = [
+    {
+      "id": "tv_int_1",
+      "device_id": "dev1",
+      "name": "HDBox FS-9200 Главное меню",
+      "description": "Основной интерфейс главного меню HDBox FS-9200",
+      "type": "main_menu",
+      "screenshot_data": null,
+      "clickable_areas": [],
+      "highlight_areas": [],
+      "is_active": true,
+      "created_at": "2025-08-18T10:00:00Z",
+      "updated_at": "2025-08-18T10:00:00Z"
+    },
+    {
+      "id": "tv_int_2",
+      "device_id": "dev1",
+      "name": "HDBox FS-9200 Настройки",
+      "description": "Интерфейс настроек HDBox FS-9200",
+      "type": "settings",
+      "screenshot_data": null,
+      "clickable_areas": [],
+      "highlight_areas": [],
+      "is_active": true,
+      "created_at": "2025-08-18T10:00:00Z",
+      "updated_at": "2025-08-18T10:00:00Z"
+    },
+    {
+      "id": "tv_int_3",
+      "device_id": "dev2",
+      "name": "OpenBox Gold S1 Меню",
+      "description": "Главное меню OpenBox Gold S1",
+      "type": "main_menu",
+      "screenshot_data": null,
+      "clickable_areas": [],
+      "highlight_areas": [],
+      "is_active": true,
+      "created_at": "2025-08-18T10:00:00Z",
+      "updated_at": "2025-08-18T10:00:00Z"
+    },
+    {
+      "id": "tv_int_4",
+      "device_id": "dev3",
+      "name": "UCLAN B6 Интерфейс",
+      "description": "Основной интерфейс UCLAN B6",
+      "type": "main_menu",
+      "screenshot_data": null,
+      "clickable_areas": [],
+      "highlight_areas": [],
+      "is_active": true,
+      "created_at": "2025-08-18T10:00:00Z",
+      "updated_at": "2025-08-18T10:00:00Z"
+    },
+    {
+      "id": "tv_int_5",
+      "device_id": "dev4",
+      "name": "OpenBox A1 Меню настроек",
+      "description": "Меню настроек OpenBox A1",
+      "type": "settings",
+      "screenshot_data": null,
+      "clickable_areas": [],
+      "highlight_areas": [],
+      "is_active": false,
+      "created_at": "2025-08-18T10:00:00Z",
+      "updated_at": "2025-08-18T10:00:00Z"
     }
   ];
 
