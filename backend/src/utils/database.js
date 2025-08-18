@@ -30,7 +30,8 @@ const dbConfig = process.env.DATABASE_URL
       database: process.env.DB_NAME || "ant_support",
       user: process.env.DB_USER || "postgres",
       password: process.env.DB_PASSWORD || "password",
-      ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+      ssl:
+        process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
       max: 20,
       min: 2,
       idleTimeoutMillis: 30000,

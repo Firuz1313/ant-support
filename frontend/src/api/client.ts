@@ -37,10 +37,10 @@ export class ApiClient {
       "Content-Type": "application/json",
       ...config.defaultHeaders,
     };
-    
+
     // Determine if we should use static API (cloud environment)
     this.useStaticApi = this.shouldUseStaticApi();
-    
+
     if (this.useStaticApi) {
       console.log("🌩️ Using static API for cloud environment");
     }
@@ -48,14 +48,16 @@ export class ApiClient {
 
   private shouldUseStaticApi(): boolean {
     if (typeof window === "undefined") return false;
-    
+
     const hostname = window.location.hostname;
-    
+
     // Use static API in cloud environments
-    return hostname.includes("builder.codes") || 
-           hostname.includes("fly.dev") || 
-           hostname.includes("vercel.app") ||
-           hostname.includes("netlify.app");
+    return (
+      hostname.includes("builder.codes") ||
+      hostname.includes("fly.dev") ||
+      hostname.includes("vercel.app") ||
+      hostname.includes("netlify.app")
+    );
   }
 
   private buildUrl(endpoint: string, params?: Record<string, any>): string {
@@ -232,96 +234,114 @@ export class ApiClient {
   }
 
   // Handle static API requests for cloud environment
-  private async handleStaticApiRequest<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    console.log(`🌩️ Static API Request: ${options.method || 'GET'} ${endpoint}`);
+  private async handleStaticApiRequest<T>(
+    endpoint: string,
+    options: RequestOptions = {},
+  ): Promise<T> {
+    console.log(
+      `🌩️ Static API Request: ${options.method || "GET"} ${endpoint}`,
+    );
 
     try {
       // Route to appropriate static API method based on endpoint and method
-      const method = options.method || 'GET';
+      const method = options.method || "GET";
 
       // TV Interfaces endpoints
-      if (endpoint === '/v1/tv-interfaces') {
-        if (method === 'GET') {
-          return await StaticApiService.getTVInterfaces() as T;
-        } else if (method === 'POST') {
+      if (endpoint === "/v1/tv-interfaces") {
+        if (method === "GET") {
+          return (await StaticApiService.getTVInterfaces()) as T;
+        } else if (method === "POST") {
           const body = options.body ? JSON.parse(options.body as string) : {};
-          return await StaticApiService.createTVInterface(body) as T;
+          return (await StaticApiService.createTVInterface(body)) as T;
         }
       }
 
-      if (endpoint === '/v1/tv-interfaces/stats') {
-        return await StaticApiService.getTVInterfaceStats() as T;
+      if (endpoint === "/v1/tv-interfaces/stats") {
+        return (await StaticApiService.getTVInterfaceStats()) as T;
       }
 
       // TV Interface by ID endpoints
-      const tvInterfaceIdMatch = endpoint.match(/^\/v1\/tv-interfaces\/([^\/]+)$/);
+      const tvInterfaceIdMatch = endpoint.match(
+        /^\/v1\/tv-interfaces\/([^\/]+)$/,
+      );
       if (tvInterfaceIdMatch) {
         const id = tvInterfaceIdMatch[1];
-        if (method === 'GET') {
-          return await StaticApiService.getTVInterfaceById(id) as T;
-        } else if (method === 'PUT') {
+        if (method === "GET") {
+          return (await StaticApiService.getTVInterfaceById(id)) as T;
+        } else if (method === "PUT") {
           const body = options.body ? JSON.parse(options.body as string) : {};
-          return await StaticApiService.updateTVInterface(id, body) as T;
-        } else if (method === 'DELETE') {
-          return await StaticApiService.deleteTVInterface(id) as T;
+          return (await StaticApiService.updateTVInterface(id, body)) as T;
+        } else if (method === "DELETE") {
+          return (await StaticApiService.deleteTVInterface(id)) as T;
         }
       }
 
       // TV Interface toggle endpoint
-      const tvInterfaceToggleMatch = endpoint.match(/^\/v1\/tv-interfaces\/([^\/]+)\/toggle$/);
-      if (tvInterfaceToggleMatch && method === 'PATCH') {
+      const tvInterfaceToggleMatch = endpoint.match(
+        /^\/v1\/tv-interfaces\/([^\/]+)\/toggle$/,
+      );
+      if (tvInterfaceToggleMatch && method === "PATCH") {
         const id = tvInterfaceToggleMatch[1];
-        return await StaticApiService.toggleTVInterfaceStatus(id) as T;
+        return (await StaticApiService.toggleTVInterfaceStatus(id)) as T;
       }
 
       // TV Interface duplicate endpoint
-      const tvInterfaceDuplicateMatch = endpoint.match(/^\/v1\/tv-interfaces\/([^\/]+)\/duplicate$/);
-      if (tvInterfaceDuplicateMatch && method === 'POST') {
+      const tvInterfaceDuplicateMatch = endpoint.match(
+        /^\/v1\/tv-interfaces\/([^\/]+)\/duplicate$/,
+      );
+      if (tvInterfaceDuplicateMatch && method === "POST") {
         const id = tvInterfaceDuplicateMatch[1];
         const body = options.body ? JSON.parse(options.body as string) : {};
-        return await StaticApiService.duplicateTVInterface(id, body.name) as T;
+        return (await StaticApiService.duplicateTVInterface(
+          id,
+          body.name,
+        )) as T;
       }
 
       // TV Interface export endpoint
-      const tvInterfaceExportMatch = endpoint.match(/^\/v1\/tv-interfaces\/([^\/]+)\/export$/);
-      if (tvInterfaceExportMatch && method === 'GET') {
+      const tvInterfaceExportMatch = endpoint.match(
+        /^\/v1\/tv-interfaces\/([^\/]+)\/export$/,
+      );
+      if (tvInterfaceExportMatch && method === "GET") {
         const id = tvInterfaceExportMatch[1];
-        return await StaticApiService.exportTVInterface(id) as T;
+        return (await StaticApiService.exportTVInterface(id)) as T;
       }
 
       // TV Interface by device endpoint
-      const tvInterfaceDeviceMatch = endpoint.match(/^\/v1\/tv-interfaces\/device\/([^\/]+)$/);
-      if (tvInterfaceDeviceMatch && method === 'GET') {
+      const tvInterfaceDeviceMatch = endpoint.match(
+        /^\/v1\/tv-interfaces\/device\/([^\/]+)$/,
+      );
+      if (tvInterfaceDeviceMatch && method === "GET") {
         const deviceId = tvInterfaceDeviceMatch[1];
-        return await StaticApiService.getTVInterfacesByDevice(deviceId) as T;
+        return (await StaticApiService.getTVInterfacesByDevice(deviceId)) as T;
       }
 
       // Other endpoints
       switch (endpoint) {
-        case '/v1/devices':
-          return await StaticApiService.getDevices() as T;
-        case '/v1/devices/stats':
-          return await StaticApiService.getDeviceStats() as T;
-        case '/v1/problems':
-          return await StaticApiService.getProblems() as T;
-        case '/v1/problems/stats':
-          return await StaticApiService.getProblemStats() as T;
-        case '/v1/steps':
-          return await StaticApiService.getSteps() as T;
-        case '/v1/steps/stats':
-          return await StaticApiService.getStepStats() as T;
-        case '/v1/sessions':
-          return await StaticApiService.getSessions() as T;
-        case '/v1/sessions/active':
-          return await StaticApiService.getActiveSessions() as T;
-        case '/v1/sessions/stats':
-          return await StaticApiService.getSessionStats() as T;
+        case "/v1/devices":
+          return (await StaticApiService.getDevices()) as T;
+        case "/v1/devices/stats":
+          return (await StaticApiService.getDeviceStats()) as T;
+        case "/v1/problems":
+          return (await StaticApiService.getProblems()) as T;
+        case "/v1/problems/stats":
+          return (await StaticApiService.getProblemStats()) as T;
+        case "/v1/steps":
+          return (await StaticApiService.getSteps()) as T;
+        case "/v1/steps/stats":
+          return (await StaticApiService.getStepStats()) as T;
+        case "/v1/sessions":
+          return (await StaticApiService.getSessions()) as T;
+        case "/v1/sessions/active":
+          return (await StaticApiService.getActiveSessions()) as T;
+        case "/v1/sessions/stats":
+          return (await StaticApiService.getSessionStats()) as T;
         default:
           console.warn(`🌩️ Unknown static API endpoint: ${method} ${endpoint}`);
           return {
             success: true,
             data: [],
-            message: `Static endpoint ${method} ${endpoint} not implemented`
+            message: `Static endpoint ${method} ${endpoint} not implemented`,
           } as T;
       }
     } catch (error) {
@@ -389,7 +409,7 @@ export class ApiClient {
 const getApiBaseUrl = (): string => {
   // Priority for environment variable
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  
+
   if (envUrl) {
     console.log("🔗 Using environment API URL:", envUrl);
     return envUrl;

@@ -25,7 +25,9 @@ const pool = new Pool(dbConfig);
 async function testConnection() {
   try {
     const client = await pool.connect();
-    const result = await client.query("SELECT NOW() as current_time, version() as postgres_version");
+    const result = await client.query(
+      "SELECT NOW() as current_time, version() as postgres_version",
+    );
     console.log("✅ Neon database connected successfully");
     console.log(`🕐 Server time: ${result.rows[0].current_time}`);
     client.release();
@@ -48,7 +50,7 @@ app.get("/api/health/db", async (req, res) => {
     const result = await client.query("SELECT NOW() as server_time");
     const latencyMs = Date.now() - startTime;
     client.release();
-    
+
     res.json({
       status: "ok",
       latencyMs,
@@ -81,9 +83,11 @@ app.get("/health", (req, res) => {
 app.get("/api/v1/devices", async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query("SELECT * FROM devices ORDER BY order_index ASC");
+    const result = await client.query(
+      "SELECT * FROM devices ORDER BY order_index ASC",
+    );
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -112,7 +116,7 @@ app.get("/api/v1/devices/stats", async (req, res) => {
       FROM devices
     `);
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows[0],
@@ -132,9 +136,11 @@ app.get("/api/v1/devices/stats", async (req, res) => {
 app.get("/api/v1/problems", async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query("SELECT * FROM problems ORDER BY created_at DESC");
+    const result = await client.query(
+      "SELECT * FROM problems ORDER BY created_at DESC",
+    );
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -165,7 +171,7 @@ app.get("/api/v1/problems/stats", async (req, res) => {
       FROM problems
     `);
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows[0],
@@ -185,9 +191,11 @@ app.get("/api/v1/problems/stats", async (req, res) => {
 app.get("/api/v1/steps", async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query("SELECT * FROM diagnostic_steps ORDER BY step_number ASC");
+    const result = await client.query(
+      "SELECT * FROM diagnostic_steps ORDER BY step_number ASC",
+    );
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -216,7 +224,7 @@ app.get("/api/v1/steps/stats", async (req, res) => {
       FROM diagnostic_steps
     `);
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows[0],
@@ -236,9 +244,11 @@ app.get("/api/v1/steps/stats", async (req, res) => {
 app.get("/api/v1/sessions", async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query("SELECT * FROM diagnostic_sessions ORDER BY created_at DESC");
+    const result = await client.query(
+      "SELECT * FROM diagnostic_sessions ORDER BY created_at DESC",
+    );
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -265,7 +275,7 @@ app.get("/api/v1/sessions/active", async (req, res) => {
       ORDER BY created_at DESC
     `);
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -296,7 +306,7 @@ app.get("/api/v1/sessions/stats", async (req, res) => {
       FROM diagnostic_sessions
     `);
     client.release();
-    
+
     res.json({
       success: true,
       data: result.rows[0],
@@ -337,7 +347,7 @@ app.listen(PORT, async () => {
   console.log(`📡 Health check: http://localhost:${PORT}/health`);
   console.log(`🔌 API base: http://localhost:${PORT}/api/v1`);
   console.log(`🗄️  Database check: http://localhost:${PORT}/api/health/db`);
-  
+
   // Test database connection on startup
   const connected = await testConnection();
   if (!connected) {
