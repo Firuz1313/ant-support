@@ -77,7 +77,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// API routes with database queries
+// Devices endpoints
 app.get("/api/v1/devices", async (req, res) => {
   try {
     const client = await pool.connect();
@@ -101,6 +101,34 @@ app.get("/api/v1/devices", async (req, res) => {
   }
 });
 
+app.get("/api/v1/devices/stats", async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE is_active = true) as active,
+        COUNT(*) FILTER (WHERE is_active = false) as inactive
+      FROM devices
+    `);
+    client.release();
+    
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: "Device stats retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching device stats:", error);
+    res.json({
+      success: true,
+      data: { total: 0, active: 0, inactive: 0 },
+      message: "Device stats not available",
+    });
+  }
+});
+
+// Problems endpoints
 app.get("/api/v1/problems", async (req, res) => {
   try {
     const client = await pool.connect();
@@ -124,6 +152,36 @@ app.get("/api/v1/problems", async (req, res) => {
   }
 });
 
+app.get("/api/v1/problems/stats", async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE is_active = true) as active,
+        COUNT(*) FILTER (WHERE is_active = false) as inactive,
+        COUNT(*) FILTER (WHERE status = 'published') as published,
+        COUNT(*) FILTER (WHERE status = 'draft') as draft
+      FROM problems
+    `);
+    client.release();
+    
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: "Problem stats retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching problem stats:", error);
+    res.json({
+      success: true,
+      data: { total: 0, active: 0, inactive: 0, published: 0, draft: 0 },
+      message: "Problem stats not available",
+    });
+  }
+});
+
+// Steps endpoints
 app.get("/api/v1/steps", async (req, res) => {
   try {
     const client = await pool.connect();
@@ -147,6 +205,34 @@ app.get("/api/v1/steps", async (req, res) => {
   }
 });
 
+app.get("/api/v1/steps/stats", async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE is_active = true) as active,
+        COUNT(*) FILTER (WHERE is_active = false) as inactive
+      FROM diagnostic_steps
+    `);
+    client.release();
+    
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: "Step stats retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching step stats:", error);
+    res.json({
+      success: true,
+      data: { total: 0, active: 0, inactive: 0 },
+      message: "Step stats not available",
+    });
+  }
+});
+
+// Sessions endpoints
 app.get("/api/v1/sessions", async (req, res) => {
   try {
     const client = await pool.connect();
@@ -166,6 +252,62 @@ app.get("/api/v1/sessions", async (req, res) => {
       data: [],
       total: 0,
       message: "Sessions table not found - using empty data",
+    });
+  }
+});
+
+app.get("/api/v1/sessions/active", async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT * FROM diagnostic_sessions 
+      WHERE is_active = true AND end_time IS NULL 
+      ORDER BY created_at DESC
+    `);
+    client.release();
+    
+    res.json({
+      success: true,
+      data: result.rows,
+      total: result.rowCount,
+      message: "Active sessions retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching active sessions:", error);
+    res.json({
+      success: true,
+      data: [],
+      total: 0,
+      message: "Active sessions not available",
+    });
+  }
+});
+
+app.get("/api/v1/sessions/stats", async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE is_active = true) as active,
+        COUNT(*) FILTER (WHERE is_active = false) as inactive,
+        COUNT(*) FILTER (WHERE success = true) as successful,
+        COUNT(*) FILTER (WHERE success = false) as failed
+      FROM diagnostic_sessions
+    `);
+    client.release();
+    
+    res.json({
+      success: true,
+      data: result.rows[0],
+      message: "Session stats retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching session stats:", error);
+    res.json({
+      success: true,
+      data: { total: 0, active: 0, inactive: 0, successful: 0, failed: 0 },
+      message: "Session stats not available",
     });
   }
 });
