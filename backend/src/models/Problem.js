@@ -1,12 +1,29 @@
-import BaseModel from './BaseModel.js';
-import { query, transaction } from '../utils/database.js';
+import BaseModel from "./BaseModel.js";
+import { query, transaction } from "../utils/database.js";
 
 /**
  * Модель для работы с проблемами
  */
 class Problem extends BaseModel {
   constructor() {
-    super('problems');
+    super("problems");
+  }
+
+  /**
+   * Подготовка данных для вставки (переопределяем для SERIAL ID)
+   */
+  prepareForInsert(data) {
+    const prepared = {
+      ...data,
+      created_at: this.createTimestamp(),
+      updated_at: this.createTimestamp(),
+      is_active: data.is_active !== undefined ? data.is_active : true,
+    };
+
+    // Всегда удаляем ID для проблем - используется SERIAL auto-increment
+    delete prepared.id;
+
+    return prepared;
   }
 
   /**
@@ -14,7 +31,7 @@ class Problem extends BaseModel {
    */
   async findAllWithDetails(filters = {}, options = {}) {
     try {
-      let whereConditions = ['p.id IS NOT NULL'];
+      let whereConditions = ["p.id IS NOT NULL"];
       const values = [];
       let paramIndex = 1;
 
@@ -71,7 +88,7 @@ class Problem extends BaseModel {
         LEFT JOIN devices d ON p.device_id = d.id
         LEFT JOIN diagnostic_steps ds ON p.id = ds.problem_id
         LEFT JOIN diagnostic_sessions sess ON p.id = sess.problem_id AND sess.is_active = true
-        WHERE ${whereConditions.join(' AND ')}
+        WHERE ${whereConditions.join(" AND ")}
         GROUP BY p.id, d.name, d.brand, d.model, d.color
         ORDER BY p.priority DESC, p.created_at DESC
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -82,15 +99,15 @@ class Problem extends BaseModel {
       values.push(limit, offset);
 
       const result = await query(sql, values);
-      return result.rows.map(row => ({
+      return result.rows.map((row) => ({
         ...row,
         steps_count: parseInt(row.steps_count || 0),
         active_steps_count: parseInt(row.active_steps_count || 0),
         sessions_count: parseInt(row.sessions_count || 0),
-        successful_sessions_count: parseInt(row.successful_sessions_count || 0)
+        successful_sessions_count: parseInt(row.successful_sessions_count || 0),
       }));
     } catch (error) {
-      console.error('Ошибка получения проблем с деталями:', error.message);
+      console.error("Ошибка получения проблем с деталями:", error.message);
       throw error;
     }
   }
@@ -132,17 +149,21 @@ class Problem extends BaseModel {
         steps_count: parseInt(problem.steps_count || 0),
         active_steps_count: parseInt(problem.active_steps_count || 0),
         sessions_count: parseInt(problem.sessions_count || 0),
-        successful_sessions_count: parseInt(problem.successful_sessions_count || 0),
-        avg_completion_time: problem.avg_completion_time ? Math.round(parseFloat(problem.avg_completion_time)) : null
+        successful_sessions_count: parseInt(
+          problem.successful_sessions_count || 0,
+        ),
+        avg_completion_time: problem.avg_completion_time
+          ? Math.round(parseFloat(problem.avg_completion_time))
+          : null,
       };
     } catch (error) {
-      console.error('Ошибка получения проблемы с деталями:', error.message);
+      console.error("Ошибка получения проблемы с деталями:", error.message);
       throw error;
     }
   }
 
   /**
-   * Получение проблем по устройству
+   * Получение ��роблем по устройству
    */
   async findByDevice(deviceId, options = {}) {
     try {
@@ -150,10 +171,10 @@ class Problem extends BaseModel {
       if (options.status) {
         filters.status = options.status;
       }
-      
+
       return this.findAllWithDetails(filters, options);
     } catch (error) {
-      console.error('Ошибка получения проблем по устройству:', error.message);
+      console.error("Ошибка получения проблем по устройству:", error.message);
       throw error;
     }
   }
@@ -190,13 +211,13 @@ class Problem extends BaseModel {
       const offset = options.offset || 0;
 
       const result = await query(sql, [searchTerm, limit, offset]);
-      return result.rows.map(row => ({
+      return result.rows.map((row) => ({
         ...row,
         steps_count: parseInt(row.steps_count || 0),
-        rank: parseFloat(row.rank || 0)
+        rank: parseFloat(row.rank || 0),
       }));
     } catch (error) {
-      console.error('Ошибка поиска проблем:', error.message);
+      console.error("Ошибка поиска проблем:", error.message);
       throw error;
     }
   }
@@ -225,12 +246,12 @@ class Problem extends BaseModel {
       `;
 
       const result = await query(sql, [limit]);
-      return result.rows.map(row => ({
+      return result.rows.map((row) => ({
         ...row,
-        steps_count: parseInt(row.steps_count || 0)
+        steps_count: parseInt(row.steps_count || 0),
       }));
     } catch (error) {
-      console.error('Ошибка получения популярных проблем:', error.message);
+      console.error("Ошибка получения популярных проблем:", error.message);
       throw error;
     }
   }
@@ -244,10 +265,10 @@ class Problem extends BaseModel {
       if (options.device_id) {
         filters.device_id = options.device_id;
       }
-      
+
       return this.findAllWithDetails(filters, options);
     } catch (error) {
-      console.error('Ошибка получения проблем по категории:', error.message);
+      console.error("Ошибка получения проблем по категории:", error.message);
       throw error;
     }
   }
@@ -260,12 +281,12 @@ class Problem extends BaseModel {
       return await transaction(async (client) => {
         // Получаем оригинальную проблему
         const originalResult = await client.query(
-          'SELECT * FROM problems WHERE id = $1',
-          [problemId]
+          "SELECT * FROM problems WHERE id = $1",
+          [problemId],
         );
 
         if (originalResult.rows.length === 0) {
-          throw new Error('Проблема не найдена');
+          throw new Error("Пробле��а не найдена");
         }
 
         const original = originalResult.rows[0];
@@ -276,23 +297,24 @@ class Problem extends BaseModel {
           id: this.generateId(),
           title: `${original.title} (копия)`,
           device_id: targetDeviceId || original.device_id,
-          status: 'draft',
+          status: "draft",
           completed_count: 0,
           created_at: this.createTimestamp(),
-          updated_at: this.createTimestamp()
+          updated_at: this.createTimestamp(),
         };
 
         delete newProblem.id; // Удаляем, чтобы использовать новый сгенерированный
         const prepared = this.prepareForInsert(newProblem);
-        
-        const { sql: insertSql, values: insertValues } = this.buildInsertQuery(prepared);
+
+        const { sql: insertSql, values: insertValues } =
+          this.buildInsertQuery(prepared);
         const insertResult = await client.query(insertSql, insertValues);
         const duplicatedProblem = insertResult.rows[0];
 
         // Дублируем связанные шаги
         const stepsResult = await client.query(
-          'SELECT * FROM diagnostic_steps WHERE problem_id = $1 ORDER BY step_number',
-          [problemId]
+          "SELECT * FROM diagnostic_steps WHERE problem_id = $1 ORDER BY step_number",
+          [problemId],
         );
 
         for (const step of stepsResult.rows) {
@@ -302,25 +324,27 @@ class Problem extends BaseModel {
             problem_id: duplicatedProblem.id,
             device_id: targetDeviceId || step.device_id,
             created_at: this.createTimestamp(),
-            updated_at: this.createTimestamp()
+            updated_at: this.createTimestamp(),
           };
 
           delete newStep.id;
-          
+
           const stepColumns = Object.keys(newStep);
           const stepValues = Object.values(newStep);
-          const stepPlaceholders = stepColumns.map((_, index) => `$${index + 1}`);
+          const stepPlaceholders = stepColumns.map(
+            (_, index) => `$${index + 1}`,
+          );
 
           await client.query(
-            `INSERT INTO diagnostic_steps (${stepColumns.join(', ')}) VALUES (${stepPlaceholders.join(', ')})`,
-            stepValues
+            `INSERT INTO diagnostic_steps (${stepColumns.join(", ")}) VALUES (${stepPlaceholders.join(", ")})`,
+            stepValues,
           );
         }
 
         return duplicatedProblem;
       });
     } catch (error) {
-      console.error('Ошибка дублирования проблемы:', error.message);
+      console.error("Ошибка дублирования проблемы:", error.message);
       throw error;
     }
   }
@@ -350,7 +374,7 @@ class Problem extends BaseModel {
       const result = await query(sql, [problemId, this.createTimestamp()]);
       return result.rows[0];
     } catch (error) {
-      console.error('Ошибка обновления статистики проблемы:', error.message);
+      console.error("Ошибка обновления статистики проблемы:", error.message);
       throw error;
     }
   }
@@ -374,7 +398,7 @@ class Problem extends BaseModel {
 
       const result = await query(sql, [id]);
       if (result.rows.length === 0) {
-        return { canDelete: false, reason: 'Проблема не найдена' };
+        return { canDelete: false, reason: "Проблема не найдена" };
       }
 
       const stats = result.rows[0];
@@ -384,7 +408,7 @@ class Problem extends BaseModel {
       if (activeSessionsCount > 0) {
         return {
           canDelete: false,
-          reason: `Невозможно удалить проблему с ${activeSessionsCount} активными сессиями диагностики`
+          reason: `Невозможно удалить проблему с ${activeSessionsCount} активными сессиями диагнос��ики`,
         };
       }
 
@@ -392,13 +416,16 @@ class Problem extends BaseModel {
         return {
           canDelete: false,
           reason: `Проблема содержит ${stepsCount} диагностических шагов. Сначала удалите их.`,
-          suggestion: 'Можно архивировать проблему вместо удаления'
+          suggestion: "Можно архивировать проблему вместо удаления",
         };
       }
 
       return { canDelete: true };
     } catch (error) {
-      console.error('Ошибка проверки возможности удаления проблемы:', error.message);
+      console.error(
+        "Ошибка проверки возможности удаления проблемы:",
+        error.message,
+      );
       throw error;
     }
   }
@@ -424,7 +451,7 @@ class Problem extends BaseModel {
 
       const result = await query(sql);
       const stats = result.rows[0];
-      
+
       return {
         total: parseInt(stats.total_problems || 0),
         active: parseInt(stats.active_problems || 0),
@@ -434,10 +461,10 @@ class Problem extends BaseModel {
         moderate: parseInt(stats.moderate_problems || 0),
         minor: parseInt(stats.minor_problems || 0),
         avgSuccessRate: Math.round(parseFloat(stats.avg_success_rate || 0)),
-        totalCompletions: parseInt(stats.total_completions || 0)
+        totalCompletions: parseInt(stats.total_completions || 0),
       };
     } catch (error) {
-      console.error('Ошибка получения статистики проблем:', error.message);
+      console.error("Ошибка получения статистики проблем:", error.message);
       throw error;
     }
   }
@@ -449,12 +476,14 @@ class Problem extends BaseModel {
     try {
       // Проверяем, что у проблемы есть хотя бы один активный шаг
       const stepsCheck = await query(
-        'SELECT COUNT(*) as count FROM diagnostic_steps WHERE problem_id = $1 AND is_active = true',
-        [id]
+        "SELECT COUNT(*) as count FROM diagnostic_steps WHERE problem_id = $1 AND is_active = true",
+        [id],
       );
 
       if (parseInt(stepsCheck.rows[0].count) === 0) {
-        throw new Error('Невозможно опубликовать проблему без диагностических шагов');
+        throw new Error(
+          "Невозможно опубликовать проблему без диагностических шагов",
+        );
       }
 
       const sql = `
@@ -467,7 +496,7 @@ class Problem extends BaseModel {
       const result = await query(sql, [id, this.createTimestamp()]);
       return result.rows[0];
     } catch (error) {
-      console.error('Ошибка публикации проблемы:', error.message);
+      console.error("Ошибка публикации проблемы:", error.message);
       throw error;
     }
   }
@@ -487,7 +516,7 @@ class Problem extends BaseModel {
       const result = await query(sql, [id, this.createTimestamp()]);
       return result.rows[0];
     } catch (error) {
-      console.error('Ошибка снятия проблемы с публикации:', error.message);
+      console.error("Ошибка снятия проблемы с публикации:", error.message);
       throw error;
     }
   }

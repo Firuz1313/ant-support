@@ -1,32 +1,10 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  useCallback,
-} from "react";
-import {
-  Device,
-  Problem,
-  Step,
-  Remote,
-  StepAction,
-  DiagnosticSession,
-  ChangeLog,
-  SiteSettings,
-  APIResponse,
-  PaginatedResponse,
-  FilterOptions,
-  SearchResults,
-  ExportOptions,
-  ImportResult,
-} from "@/types";
+// Temporary stub for DataContext to fix imports
+// TODO: Remove this file and update all components to use API hooks
 
-// API Service
-class APIService {
-  private baseURL = "/api/v1";
+import React, { createContext, useContext } from "react";
 
+<<<<<<< HEAD
+=======
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -216,135 +194,67 @@ const defaultSiteSettings: SiteSettings = {
 };
 
 // Context interface
+>>>>>>> refs/remotes/origin/main
 interface DataContextType {
-  // API service
-  api: APIService;
-
-  // Loading states
-  loading: {
-    devices: boolean;
-    problems: boolean;
-    steps: boolean;
-    remotes: boolean;
-    stepActions: boolean;
-  };
-
-  // Error states
-  errors: {
-    devices?: string;
-    problems?: string;
-    steps?: string;
-    remotes?: string;
-    stepActions?: string;
-  };
-
-  // Data
-  devices: Device[];
-  problems: Problem[];
-  steps: Step[];
-  remotes: Remote[];
-  stepActions: StepAction[];
-  sessions: DiagnosticSession[];
-  changeLogs: ChangeLog[];
-  siteSettings: SiteSettings;
-
-  // CRUD operations
-  createDevice: (data: Partial<Device>) => Promise<Device>;
-  updateDevice: (id: string, data: Partial<Device>) => Promise<Device>;
+  // Devices
+  devices: any[];
+  getActiveDevices: () => any[];
+  getDeviceById: (id: string) => any;
+  createDevice: (data: any) => Promise<any>;
+  updateDevice: (id: string, data: any) => Promise<any>;
   deleteDevice: (id: string) => Promise<void>;
-  getDevice: (id: string) => Device | undefined;
-  getDeviceById: (id: string) => Device | undefined; // Alias for getDevice
 
-  createProblem: (data: Partial<Problem>) => Promise<Problem>;
-  updateProblem: (id: string, data: Partial<Problem>) => Promise<Problem>;
+  // Problems
+  problems: any[];
+  getProblemsForDevice: (deviceId: string) => any[];
+  createProblem: (data: any) => Promise<any>;
+  updateProblem: (id: string, data: any) => Promise<any>;
   deleteProblem: (id: string) => Promise<void>;
-  getProblem: (id: string) => Problem | undefined;
 
-  createStep: (data: Partial<Step>) => Promise<Step>;
-  updateStep: (id: string, data: Partial<Step>) => Promise<Step>;
+  // Steps
+  steps: any[];
+  getStepsForProblem: (problemId: string) => any[];
+  createStep: (data: any) => Promise<any>;
+  updateStep: (id: string, data: any) => Promise<any>;
   deleteStep: (id: string) => Promise<void>;
-  getStep: (id: string) => Step | undefined;
   reorderSteps: (problemId: string, stepIds: string[]) => Promise<void>;
 
-  createRemote: (data: Partial<Remote>) => Promise<Remote>;
-  updateRemote: (id: string, data: Partial<Remote>) => Promise<Remote>;
+  // Remotes
+  remotes: any[];
+  getRemoteById: (id: string) => any;
+  getDefaultRemote: () => any;
+  getDefaultRemoteForDevice: (deviceId: string) => any;
+  getRemotesForDevice: (deviceId: string) => any[];
+  getActiveRemotes: () => any[];
+  canDeleteRemote: (id: string) => { canDelete: boolean; reason?: string };
+  getRemoteUsageCount: (id: string) => number;
+  createRemote: (data: any) => Promise<any>;
+  updateRemote: (id: string, data: any) => Promise<any>;
   deleteRemote: (id: string) => Promise<void>;
-  getRemote: (id: string) => Remote | undefined;
-  getRemoteById: (id: string) => Remote | undefined; // Alias for getRemote
-  getDefaultRemote: () => Remote | undefined;
-  getDefaultRemoteForDevice: (deviceId: string) => Remote | undefined;
-  getRemoteUsageCount: (remoteId: string) => number;
-  canDeleteRemote: (remoteId: string) => {
-    canDelete: boolean;
-    reason?: string;
-  };
-  getActiveRemotes: () => Remote[];
 
-  // Relationship queries
-  getActiveDevices: () => Device[];
-  getDeviceProblems: (deviceId: string) => Problem[];
-  getProblemsForDevice: (deviceId: string) => Problem[]; // Alias for getDeviceProblems
-  getProblemSteps: (problemId: string) => Step[];
-  getStepsForProblem: (problemId: string) => Step[]; // Alias for getProblemSteps
-  getDeviceRemotes: (deviceId: string) => Remote[];
-  getRemotesForDevice: (deviceId: string) => Remote[]; // Alias for getDeviceRemotes
-  getStepActions: (stepId: string) => StepAction[];
+  // Sessions
+  sessions: any[];
+  getActiveSessions: () => any[];
+  createSession: (data: any) => Promise<any>;
+  updateSession: (id: string, data: any) => Promise<any>;
 
-  // Bulk operations
-  bulkUpdateDevices: (
-    updates: { id: string; data: Partial<Device> }[],
-  ) => Promise<Device[]>;
-  bulkDeleteProblems: (ids: string[]) => Promise<void>;
-  duplicateProblem: (
-    problemId: string,
-    targetDeviceId?: string,
-  ) => Promise<Problem>;
+  // Change logs
+  changeLogs: any[];
 
-  // Search and filtering
-  searchDevices: (
-    query: string,
-    filters?: FilterOptions,
-  ) => Promise<SearchResults<Device>>;
-  searchProblems: (
-    query: string,
-    filters?: FilterOptions,
-  ) => Promise<SearchResults<Problem>>;
-  searchSteps: (
-    query: string,
-    filters?: FilterOptions,
-  ) => Promise<SearchResults<Step>>;
-
-  // Import/Export
-  exportData: (options: ExportOptions) => Promise<{ downloadUrl: string }>;
-  importData: (file: File, options: any) => Promise<ImportResult>;
-
-  // Analytics and sessions
-  createSession: (
-    sessionData: Partial<DiagnosticSession>,
-  ) => Promise<DiagnosticSession>;
-  updateSession: (
-    sessionId: string,
-    data: Partial<DiagnosticSession>,
-  ) => Promise<DiagnosticSession>;
-  getActiveSessions: () => DiagnosticSession[];
-
-  // Settings
-  updateSiteSettings: (
-    settings: Partial<SiteSettings>,
-  ) => Promise<SiteSettings>;
-
-  // Utilities
-  refreshData: () => Promise<void>;
-  clearCache: () => void;
+  // Stats
   getEntityStats: (entity: string) => {
     total: number;
     active: number;
     inactive: number;
   };
-  validateEntity: (
-    entity: string,
-    data: any,
-  ) => { isValid: boolean; errors: string[] };
+
+  // Data operations
+  refreshData: () => Promise<void>;
+  exportData: (options: any) => Promise<any>;
+
+  // Settings
+  siteSettings: any;
+  updateSiteSettings: (settings: any) => Promise<any>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -357,6 +267,12 @@ export const useData = () => {
   return context;
 };
 
+<<<<<<< HEAD
+// Stub provider that returns empty/default values
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+=======
 interface DataProviderProps {
   children: ReactNode;
 }
@@ -1394,66 +1310,58 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     [],
   );
 
+>>>>>>> refs/remotes/origin/main
   const value: DataContextType = {
-    api,
-    loading,
-    errors,
-    devices,
-    problems,
-    steps,
-    remotes,
-    stepActions,
-    sessions,
-    changeLogs,
-    siteSettings,
-    createDevice,
-    updateDevice,
-    deleteDevice,
-    getDevice,
-    getDeviceById,
-    createProblem,
-    updateProblem,
-    deleteProblem,
-    getProblem,
-    createStep,
-    updateStep,
-    deleteStep,
-    getStep,
-    reorderSteps,
-    createRemote,
-    updateRemote,
-    deleteRemote,
-    getRemote,
-    getRemoteById,
-    getDefaultRemote,
-    getDefaultRemoteForDevice,
-    getRemoteUsageCount,
-    canDeleteRemote,
-    getActiveRemotes,
-    getActiveDevices,
-    getDeviceProblems,
-    getProblemsForDevice,
-    getProblemSteps,
-    getStepsForProblem,
-    getDeviceRemotes,
-    getRemotesForDevice,
-    getStepActions,
-    bulkUpdateDevices,
-    bulkDeleteProblems,
-    duplicateProblem,
-    searchDevices,
-    searchProblems,
-    searchSteps,
-    exportData,
-    importData,
-    createSession,
-    updateSession,
-    getActiveSessions,
-    updateSiteSettings,
-    refreshData,
-    clearCache,
-    getEntityStats,
-    validateEntity,
+    devices: [],
+    getActiveDevices: () => [],
+    getDeviceById: () => null,
+    createDevice: async () => ({}),
+    updateDevice: async () => ({}),
+    deleteDevice: async () => {},
+
+    problems: [],
+    getProblemsForDevice: () => [],
+    createProblem: async () => ({}),
+    updateProblem: async () => ({}),
+    deleteProblem: async () => {},
+
+    steps: [],
+    getStepsForProblem: () => [],
+    createStep: async () => ({}),
+    updateStep: async () => ({}),
+    deleteStep: async () => {},
+    reorderSteps: async () => {},
+
+    remotes: [],
+    getRemoteById: () => null,
+    getDefaultRemote: () => null,
+    getDefaultRemoteForDevice: () => null,
+    getRemotesForDevice: () => [],
+    getActiveRemotes: () => [],
+    canDeleteRemote: () => ({ canDelete: true }),
+    getRemoteUsageCount: () => 0,
+    createRemote: async () => ({}),
+    updateRemote: async () => ({}),
+    deleteRemote: async () => {},
+
+    sessions: [],
+    getActiveSessions: () => [],
+    createSession: async () => ({}),
+    updateSession: async () => ({}),
+
+    changeLogs: [],
+
+    getEntityStats: () => ({ total: 0, active: 0, inactive: 0 }),
+
+    refreshData: async () => {},
+    exportData: async () => ({ downloadUrl: "" }),
+
+    siteSettings: {
+      siteName: "ANT Support",
+      siteDescription: "TV Diagnostics Platform",
+      theme: "professional",
+    },
+    updateSiteSettings: async () => ({}),
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

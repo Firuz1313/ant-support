@@ -6,7 +6,11 @@ import sessionRoutes from "./sessionRoutes.js";
 import tvInterfaceRoutes from "./tvInterfaceRoutes.js";
 import tvInterfaceMarkRoutes from "./tvInterfaceMarkRoutes.js";
 import cleanupRoutes from "./cleanupRoutes.js";
+<<<<<<< HEAD
+import dbInfoRoutes from "./dbInfoRoutes.js";
+=======
 import remoteRoutes from "./remoteRoutes.js";
+>>>>>>> refs/remotes/origin/main
 
 const router = express.Router();
 
@@ -156,7 +160,7 @@ router.get("/docs", (req, res) => {
             "GET /problems/stats": "Статистика проблем",
             "GET /problems/export": "Экспорт проблем",
             "GET /problems/device/:deviceId": "Проблемы по устройству",
-            "GET /problems/category/:category": "Проблемы по категории",
+            "GET /problems/category/:category": "Проблемы по кате��ории",
             "POST /problems/:id/duplicate": "Дублирование проблемы",
             "POST /problems/:id/publish": "Публикация проблемы",
             "POST /problems/:id/unpublish": "Снятие с публикации",
@@ -200,7 +204,7 @@ router.get("/docs", (req, res) => {
             "GET /sessions/analytics": "Аналитика по времени",
             "GET /sessions/export": "Экспорт сессий",
             "POST /sessions/:id/complete": "Завершение сессии",
-            "POST /sessions/:id/progress": "Обновление прогресса",
+            "POST /sessions/:id/progress": "Обновление ��рогресса",
             "POST /sessions/cleanup": "Очистка с��арых сессий",
             "POST /sessions/:id/restore":
               "Восстановление архивированной сессии",
@@ -270,8 +274,9 @@ router.use(`${API_V1_PREFIX}/tv-interfaces`, tvInterfaceRoutes);
 router.use(`${API_V1_PREFIX}/tv-interface-marks`, tvInterfaceMarkRoutes);
 router.use(`${API_V1_PREFIX}/remotes`, remoteRoutes);
 router.use(`${API_V1_PREFIX}/cleanup`, cleanupRoutes);
+router.use(`${API_V1_PREFIX}/db-info`, dbInfoRoutes);
 
-// Обработчик для несуществующих эндпоинтов API
+// Обра��отчик для несуществующих эндпоинтов API
 router.use("*", (req, res) => {
   res.status(404).json({
     success: false,

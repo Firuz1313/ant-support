@@ -3,6 +3,13 @@ import {
   deviceValidation,
   validateRequest,
 } from "../middleware/validateRequest.js";
+<<<<<<< HEAD
+import {
+  deviceCreationValidation,
+  validateRequest as newValidateRequest,
+} from "../middleware/newValidation.js";
+=======
+>>>>>>> refs/remotes/origin/main
 
 const deviceModel = new Device();
 
@@ -40,6 +47,19 @@ class DeviceController {
         sortOrder: order.toUpperCase(),
       };
 
+<<<<<<< HEAD
+      let devices;
+      if (admin === "true") {
+        // Для админ панели - расширенная информация
+        devices = await deviceModel.getForAdmin(filters, options);
+      } else if (include_stats === "true") {
+        // С статистикой
+        devices = await deviceModel.findAllWithStats(filters, options);
+      } else {
+        // Обычный список
+        devices = await deviceModel.findAll(filters, options);
+      }
+=======
       // Прямые вызовы к БД - fail-fast при ошибках
       const devices = await (async () => {
         if (admin === "true") {
@@ -50,6 +70,7 @@ class DeviceController {
           return await deviceModel.findAll(filters, options);
         }
       })();
+>>>>>>> refs/remotes/origin/main
 
       const total = await deviceModel.count(filters);
       const totalPages = Math.ceil(total / options.limit);
@@ -170,7 +191,7 @@ class DeviceController {
           is_active: true,
         });
 
-        if (duplicateDevice && duplicateDevice.id !== id) {
+        if (duplicateDevice && String(duplicateDevice.id) !== String(id)) {
           return res.status(409).json({
             success: false,
             error: "Устройство с таким названием уже существует",
@@ -451,10 +472,14 @@ class DeviceController {
           },
         });
       } else {
-        // Другие форматы можно добавить позже (CSV, XML и т.д.)
+        // Другие ф��рматы можно добавить позже (CSV, XML и т.д.)
         res.status(400).json({
           success: false,
+<<<<<<< HEAD
+          error: "Неподдерживаемый формат экспор��а",
+=======
           error: "Неподдерживаемый формат экспорта",
+>>>>>>> refs/remotes/origin/main
           supportedFormats: ["json"],
           timestamp: new Date().toISOString(),
         });
@@ -468,8 +493,45 @@ class DeviceController {
 // Создаем экземпляр контроллера
 const deviceController = new DeviceController();
 
+/**
+ * Создание устройства без валидации ID (новое решение для SERIAL ID)
+ */
+export const createDeviceNew = async (req, res, next) => {
+  try {
+    console.log("🆕 Creating device with new validation");
+    const deviceData = req.body;
+
+    // Проверяем уникальность названия для активных устройств
+    const existingDevice = await deviceModel.findOne({
+      name: deviceData.name,
+      is_active: true,
+    });
+
+    if (existingDevice) {
+      return res.status(409).json({
+        success: false,
+        error: "Устройство с таким названием уже существует",
+        errorType: "DUPLICATE_ERROR",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const newDevice = await deviceModel.create(deviceData);
+
+    res.status(201).json({
+      success: true,
+      data: newDevice,
+      message: "Устройство успешно создано",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Применяем валидацию к методам
 const validateDeviceCreation = validateRequest(deviceValidation.create);
+const validateDeviceCreationNew = newValidateRequest(deviceCreationValidation);
 const validateDeviceUpdate = validateRequest(deviceValidation.update);
 
 // Экспортируем методы с примен��нной валидацией
@@ -480,6 +542,13 @@ export const createDevice = [
   validateDeviceCreation,
   deviceController.createDevice.bind(deviceController),
 ];
+<<<<<<< HEAD
+export const createDeviceNewWithValidation = [
+  validateDeviceCreationNew,
+  createDeviceNew,
+];
+=======
+>>>>>>> refs/remotes/origin/main
 export const updateDevice = [
   validateDeviceUpdate,
   deviceController.updateDevice.bind(deviceController),

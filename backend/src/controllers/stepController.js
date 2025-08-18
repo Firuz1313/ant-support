@@ -227,7 +227,7 @@ class StepController {
           is_active: true,
         });
 
-        if (duplicateStep && duplicateStep.id !== id) {
+        if (duplicateStep && String(duplicateStep.id) !== String(id)) {
           return res.status(409).json({
             success: false,
             error: `Шаг с номером ${updateData.step_number} уже существует для данной проблемы`,
@@ -674,7 +674,7 @@ class StepController {
     try {
       const { problemId } = req.params;
 
-      // Проверяем существование проблемы
+      // Проверяем существование проблем��
       const problem = await problemModel.findById(problemId);
       if (!problem) {
         return res.status(404).json({

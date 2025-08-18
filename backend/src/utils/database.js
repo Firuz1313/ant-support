@@ -13,6 +13,16 @@ dotenv.config();
 
 const { Pool, Client } = pkg;
 
+<<<<<<< HEAD
+// Always use real PostgreSQL database
+const USE_MOCK_DB = false;
+
+// Конфигурация подключения к PostgreSQL
+const dbConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+=======
 // Strict .env validation - все ключи обязательны
 function validateRequiredEnvVars() {
   const required = [
@@ -44,14 +54,33 @@ const dbConfig = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+>>>>>>> refs/remotes/origin/main
 
-  // Настройки pool соединений
-  max: 20, // максимальное количество соединений в pool
-  min: 5, // минимальное количество соединений
-  idleTimeoutMillis: 30000, // время простоя перед закрытием соединения
-  connectionTimeoutMillis: 5000, // таймаут подключения
-  maxUses: 7500, // максимальное количество использований соединения
-};
+      // Настройки pool соединений
+      max: 20, // максимальное количество соединений в pool
+      min: 2, // минимальное количество соединений
+      idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
+      connectionTimeoutMillis:
+        parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
+      maxUses: 7500, // максимальное количество использований соединения
+    }
+  : {
+      host: process.env.DB_HOST || "localhost",
+      port: parseInt(process.env.DB_PORT) || 5432,
+      database: process.env.DB_NAME || "ant_support",
+      user: process.env.DB_USER || "postgres",
+      password: process.env.DB_PASSWORD || "password",
+      ssl:
+        process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+
+      // Настройки pool соединений
+      max: 20,
+      min: 2,
+      idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT) || 30000,
+      connectionTimeoutMillis:
+        parseInt(process.env.DB_CONNECTION_TIMEOUT) || 10000,
+      maxUses: 7500,
+    };
 
 console.log("🔧 PostgreSQL Configuration (STRICT MODE - NO FALLBACKS):");
 console.log(`📊 Host: ${dbConfig.host}:${dbConfig.port}`);
@@ -89,7 +118,14 @@ pool.on("release", (client) => {
   }
 });
 
+<<<<<<< HEAD
+// Always use real PostgreSQL database
+console.log("🔗 Using PostgreSQL database");
+
+// Функция проверки подключения к базе данных
+=======
 // Функция проверки подключения к базе данных с fail-fast
+>>>>>>> refs/remotes/origin/main
 export async function testConnection() {
   let client;
   try {
@@ -110,8 +146,16 @@ export async function testConnection() {
       version: result.rows[0].postgres_version,
     };
   } catch (error) {
+<<<<<<< HEAD
+    console.error("❌ Ошибка подключения к PostgreSQL:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+=======
     console.error("❌ FATAL: PostgreSQL connection failed:", error.message);
     throw error; // FAIL-FAST: пробрасываем ошибку дальше
+>>>>>>> refs/remotes/origin/main
   } finally {
     if (client) {
       client.release();
@@ -146,8 +190,11 @@ export async function query(text, params = []) {
     console.error(`❌ FATAL SQL Error after ${duration}ms:`, error.message);
     console.error("🔍 Query:", text);
     console.error("🔍 Parameters:", params);
+<<<<<<< HEAD
+=======
 
     // FAIL-FAST: Никаких fallback, сразу пробрасываем ошибку
+>>>>>>> refs/remotes/origin/main
     throw error;
   } finally {
     if (client) {
@@ -181,6 +228,11 @@ export async function transaction(callback) {
 
 // Функция создания базы данных (если не существует)
 export async function createDatabase() {
+<<<<<<< HEAD
+  // For Neon, database already exists, this is a no-op
+  console.log("📊 Using existing Neon database");
+  return true;
+=======
   const adminConfig = {
     ...dbConfig,
     database: "postgres", // подключаемся к системной БД для создания новой
@@ -213,6 +265,7 @@ export async function createDatabase() {
       await client.end();
     }
   }
+>>>>>>> refs/remotes/origin/main
 }
 
 // Функция выполнения миграций
@@ -259,7 +312,7 @@ export async function runMigrations() {
         continue;
       }
 
-      console.log(`🔄 Выполнение миграции: ${filename}`);
+      console.log(`🔄 Выпол��ение миграции: ${filename}`);
 
       const migrationPath = path.join(migrationsDir, filename);
       const migrationSQL = fs.readFileSync(migrationPath, "utf8");
