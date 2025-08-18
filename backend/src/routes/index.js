@@ -6,11 +6,8 @@ import sessionRoutes from "./sessionRoutes.js";
 import tvInterfaceRoutes from "./tvInterfaceRoutes.js";
 import tvInterfaceMarkRoutes from "./tvInterfaceMarkRoutes.js";
 import cleanupRoutes from "./cleanupRoutes.js";
-<<<<<<< HEAD
 import dbInfoRoutes from "./dbInfoRoutes.js";
-=======
 import remoteRoutes from "./remoteRoutes.js";
->>>>>>> refs/remotes/origin/main
 
 const router = express.Router();
 
