@@ -139,7 +139,7 @@ export class StaticApiService {
       "id": "prob3",
       "device_id": "dev2",
       "title": "Нет звука", 
-      "description": "Отсутствует звук при наличии изображения",
+      "description": "От��утствует звук при наличии изображения",
       "category": "audio",
       "icon": "VolumeX",
       "color": "from-yellow-500 to-yellow-600",
@@ -176,7 +176,7 @@ export class StaticApiService {
     {
       "id": "prob5",
       "device_id": "dev4", 
-      "title": "Пульт не работает",
+      "title": "��ульт не работает",
       "description": "Пульт дистанционного управления не реагирует",
       "category": "remote",
       "icon": "Zap",
@@ -258,7 +258,7 @@ export class StaticApiService {
       "device_id": "dev1", 
       "step_number": 1,
       "title": "Проверьте кабели",
-      "description": "Убедитесь, что ��се кабели подключены правильно",
+      "description": "Убедитесь, что все кабели подключены правильно",
       "instruction": "Проверьте HDMI/AV кабели между приставкой и телевизором",
       "estimated_time": 60,
       "is_active": true,
@@ -284,7 +284,7 @@ export class StaticApiService {
       "device_id": "dev1",
       "step_number": 1,
       "title": "Настройте разрешение",
-      "description": "Измените настройки разрешения экрана",
+      "description": "Измените настройки разрешения экра��а",
       "instruction": "Войдите в меню настроек и выберите подходящее разрешение",
       "estimated_time": 90,
       "is_active": true,
@@ -311,7 +311,7 @@ export class StaticApiService {
       "step_number": 1,
       "title": "Проверьте питание",
       "description": "Убедитесь, что устройство получает питание",
-      "instruction": "Проверьте подключение блока питания и индикаторы на устройстве",
+      "instruction": "Проверьте подключение блока питания и индикаторы на уст��ойстве",
       "estimated_time": 30,
       "is_active": true,
       "created_at": "2025-08-18T10:00:00Z", 
@@ -322,7 +322,7 @@ export class StaticApiService {
       "problem_id": "prob5",
       "device_id": "dev4",
       "step_number": 1,
-      "title": "Заме��ите батарейки",
+      "title": "Замените батарейки",
       "description": "Проверьте и замените батарейки в пульте",
       "instruction": "Откройте отсек для батареек и установите новые",
       "estimated_time": 15,
@@ -747,6 +747,198 @@ export class StaticApiService {
       },
       message: "Session stats retrieved successfully"
     };
+  }
+
+  // TV Interfaces endpoints
+  static async getTVInterfaces() {
+    await this.simulateDelay();
+    return {
+      success: true,
+      data: this.tvInterfaces,
+      total: this.tvInterfaces.length,
+      message: "TV interfaces retrieved successfully"
+    };
+  }
+
+  static async getTVInterfaceById(id: string) {
+    await this.simulateDelay();
+    const tvInterface = this.tvInterfaces.find(tv => tv.id === id);
+    if (tvInterface) {
+      return {
+        success: true,
+        data: tvInterface,
+        message: "TV interface retrieved successfully"
+      };
+    } else {
+      return {
+        success: false,
+        error: "TV interface not found",
+        message: "TV interface with this ID does not exist"
+      };
+    }
+  }
+
+  static async getTVInterfacesByDevice(deviceId: string) {
+    await this.simulateDelay();
+    const deviceInterfaces = this.tvInterfaces.filter(tv => tv.device_id === deviceId);
+    return {
+      success: true,
+      data: deviceInterfaces,
+      total: deviceInterfaces.length,
+      message: "TV interfaces for device retrieved successfully"
+    };
+  }
+
+  static async getTVInterfaceStats() {
+    await this.simulateDelay();
+    const active = this.tvInterfaces.filter(tv => tv.is_active).length;
+    const inactive = this.tvInterfaces.filter(tv => !tv.is_active).length;
+    const mainMenus = this.tvInterfaces.filter(tv => tv.type === 'main_menu').length;
+    const settings = this.tvInterfaces.filter(tv => tv.type === 'settings').length;
+
+    return {
+      success: true,
+      data: {
+        total: this.tvInterfaces.length,
+        active,
+        inactive,
+        main_menu: mainMenus,
+        settings: settings
+      },
+      message: "TV interface stats retrieved successfully"
+    };
+  }
+
+  static async createTVInterface(data: any) {
+    await this.simulateDelay();
+    const newInterface = {
+      id: `tv_int_${Date.now()}`,
+      device_id: data.device_id,
+      name: data.name,
+      description: data.description || "",
+      type: data.type || "main_menu",
+      screenshot_data: data.screenshot_data || null,
+      clickable_areas: data.clickable_areas || [],
+      highlight_areas: data.highlight_areas || [],
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    this.tvInterfaces.push(newInterface);
+    return {
+      success: true,
+      data: newInterface,
+      message: "TV interface created successfully"
+    };
+  }
+
+  static async updateTVInterface(id: string, data: any) {
+    await this.simulateDelay();
+    const index = this.tvInterfaces.findIndex(tv => tv.id === id);
+    if (index !== -1) {
+      this.tvInterfaces[index] = {
+        ...this.tvInterfaces[index],
+        ...data,
+        updated_at: new Date().toISOString()
+      };
+      return {
+        success: true,
+        data: this.tvInterfaces[index],
+        message: "TV interface updated successfully"
+      };
+    } else {
+      return {
+        success: false,
+        error: "TV interface not found",
+        message: "TV interface with this ID does not exist"
+      };
+    }
+  }
+
+  static async deleteTVInterface(id: string) {
+    await this.simulateDelay();
+    const index = this.tvInterfaces.findIndex(tv => tv.id === id);
+    if (index !== -1) {
+      this.tvInterfaces.splice(index, 1);
+      return {
+        success: true,
+        message: "TV interface deleted successfully"
+      };
+    } else {
+      return {
+        success: false,
+        error: "TV interface not found",
+        message: "TV interface with this ID does not exist"
+      };
+    }
+  }
+
+  static async toggleTVInterfaceStatus(id: string) {
+    await this.simulateDelay();
+    const index = this.tvInterfaces.findIndex(tv => tv.id === id);
+    if (index !== -1) {
+      this.tvInterfaces[index].is_active = !this.tvInterfaces[index].is_active;
+      this.tvInterfaces[index].updated_at = new Date().toISOString();
+      return {
+        success: true,
+        data: this.tvInterfaces[index],
+        message: "TV interface status toggled successfully"
+      };
+    } else {
+      return {
+        success: false,
+        error: "TV interface not found",
+        message: "TV interface with this ID does not exist"
+      };
+    }
+  }
+
+  static async duplicateTVInterface(id: string, newName?: string) {
+    await this.simulateDelay();
+    const original = this.tvInterfaces.find(tv => tv.id === id);
+    if (original) {
+      const duplicate = {
+        ...original,
+        id: `tv_int_${Date.now()}`,
+        name: newName || `${original.name} (копия)`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      this.tvInterfaces.push(duplicate);
+      return {
+        success: true,
+        data: duplicate,
+        message: "TV interface duplicated successfully"
+      };
+    } else {
+      return {
+        success: false,
+        error: "TV interface not found",
+        message: "TV interface with this ID does not exist"
+      };
+    }
+  }
+
+  static async exportTVInterface(id: string) {
+    await this.simulateDelay();
+    const tvInterface = this.tvInterfaces.find(tv => tv.id === id);
+    if (tvInterface) {
+      return {
+        success: true,
+        data: {
+          exportData: tvInterface,
+          fileName: `tv_interface_${tvInterface.name.replace(/\s+/g, '_')}.json`
+        },
+        message: "TV interface exported successfully"
+      };
+    } else {
+      return {
+        success: false,
+        error: "TV interface not found",
+        message: "TV interface with this ID does not exist"
+      };
+    }
   }
 
   // Simulate network delay for realism
