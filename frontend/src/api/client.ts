@@ -1,4 +1,5 @@
 import { APIResponse, PaginatedResponse, FilterOptions } from "../types";
+import { StaticApiService } from "./staticApi";
 
 export interface ApiClientConfig {
   baseUrl: string;
@@ -27,6 +28,7 @@ export class ApiClient {
   private baseUrl: string;
   private timeout: number;
   private defaultHeaders: Record<string, string>;
+  private useStaticApi: boolean;
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, "");
@@ -35,6 +37,25 @@ export class ApiClient {
       "Content-Type": "application/json",
       ...config.defaultHeaders,
     };
+    
+    // Determine if we should use static API (cloud environment)
+    this.useStaticApi = this.shouldUseStaticApi();
+    
+    if (this.useStaticApi) {
+      console.log("🌩️ Using static API for cloud environment");
+    }
+  }
+
+  private shouldUseStaticApi(): boolean {
+    if (typeof window === "undefined") return false;
+    
+    const hostname = window.location.hostname;
+    
+    // Use static API in cloud environments
+    return hostname.includes("builder.codes") || 
+           hostname.includes("fly.dev") || 
+           hostname.includes("vercel.app") ||
+           hostname.includes("netlify.app");
   }
 
   private buildUrl(endpoint: string, params?: Record<string, any>): string {
@@ -74,6 +95,11 @@ export class ApiClient {
     endpoint: string,
     options: RequestOptions = {},
   ): Promise<T> {
+    // If using static API, route to static service
+    if (this.useStaticApi) {
+      return this.handleStaticApiRequest<T>(endpoint, options);
+    }
+
     const { params, timeout = this.timeout, ...fetchOptions } = options;
 
     const url = this.buildUrl(endpoint, params);
@@ -170,16 +196,6 @@ export class ApiClient {
           }
         }
 
-        // Detailed logging for 409 conflicts
-        if (response.status === 409) {
-          console.error(`🔥 409 CONFLICT DEBUG INFO:`);
-          console.error(`   URL: ${url}`);
-          console.error(`   Method: ${fetchOptions.method}`);
-          console.error(`   Body: ${fetchOptions.body}`);
-          console.error(`   Response: ${responseText}`);
-          console.error(`   Parsed: ${JSON.stringify(responseData, null, 2)}`);
-        }
-
         const errorMessage =
           responseData?.error ||
           responseData?.message ||
@@ -212,6 +228,45 @@ export class ApiClient {
       }
 
       throw new ApiError("Unknown error occurred", 0);
+    }
+  }
+
+  // Handle static API requests for cloud environment
+  private async handleStaticApiRequest<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+    console.log(`🌩️ Static API Request: ${endpoint}`);
+    
+    try {
+      // Route to appropriate static API method based on endpoint
+      switch (endpoint) {
+        case '/v1/devices':
+          return await StaticApiService.getDevices() as T;
+        case '/v1/devices/stats':
+          return await StaticApiService.getDeviceStats() as T;
+        case '/v1/problems':
+          return await StaticApiService.getProblems() as T;
+        case '/v1/problems/stats':
+          return await StaticApiService.getProblemStats() as T;
+        case '/v1/steps':
+          return await StaticApiService.getSteps() as T;
+        case '/v1/steps/stats':
+          return await StaticApiService.getStepStats() as T;
+        case '/v1/sessions':
+          return await StaticApiService.getSessions() as T;
+        case '/v1/sessions/active':
+          return await StaticApiService.getActiveSessions() as T;
+        case '/v1/sessions/stats':
+          return await StaticApiService.getSessionStats() as T;
+        default:
+          console.warn(`🌩️ Unknown static API endpoint: ${endpoint}`);
+          return {
+            success: true,
+            data: [],
+            message: `Static endpoint ${endpoint} not implemented`
+          } as T;
+      }
+    } catch (error) {
+      console.error(`❌ Static API Error:`, error);
+      throw new ApiError("Static API Error", 500, error);
     }
   }
 
@@ -287,15 +342,10 @@ const getApiBaseUrl = (): string => {
 
     console.log("🌐 Current location:", window.location.href);
 
-    // Cloud environment (fly.dev, builder.codes)
+    // Cloud environment (will use static API)
     if (hostname.includes("builder.codes") || hostname.includes("fly.dev")) {
-      console.log("🌩️ Cloud environment detected");
-      
-      // For development, return mock data endpoints
-      // TODO: Replace with actual deployed backend URL
-      const mockUrl = "/api";
-      console.log("🔧 Using mock API for cloud development:", mockUrl);
-      return mockUrl;
+      console.log("🌩️ Cloud environment detected - will use static API");
+      return "/api"; // This won't actually be used due to static API override
     }
 
     // Local development
